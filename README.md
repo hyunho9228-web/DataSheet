@@ -1,182 +1,143 @@
 # DataSheet
 
-인귀(Unity 프로젝트) 데이터 테이블 전용 저장소입니다.
-데이터를 고친 커밋이 게임 프로젝트 저장소(`lkhwcf-arch/Human_Ghost-`)에 섞이지 않도록 따로 둡니다.
+인귀 2D 액션게임의 데이터 원본과 추출·검사·배포 도구입니다. Unity 프로젝트 `Human_Ghost-`와 이 프로젝트를 같은 부모 폴더에 둡니다.
 
-- 원본: [Ingwi_DataTable 구글 시트](https://docs.google.com/spreadsheets/d/1Xn7PQsVVOY2dE_aiTLcrFxN08fgGxDH5hpaEGJBBbG8/edit)
-- 기획은 구글 시트 하나에서 고칩니다(탭끼리 수식·밸런스 계산이 이어져 있어서).
-- 저장소에는 그 시트를 **테이블별 xlsx 파일**(`tables/`)로 나눠 올립니다. 값만 들어 있고 수식은 없습니다.
-- 각 시트 2행 기능(B2) 앞에 내보낼 형식이 적혀 있습니다: `JSON,` = UnitState(BossState·PlayerState·EliteState)·Item, `CSV,` = 나머지. 추출기는 개발팀이 만듭니다.
-- 파일·폴더·탭 이름에는 한글을 쓰지 않습니다.
-
-## 로컬 폴더 구성
-
-메인 폴더 아래에 프로젝트 폴더와 데이터 폴더를 나란히 둡니다.
-
-```
-Ingwi/                    ← 메인 폴더 (이름 자유)
-├── Human_Ghost-/         ← Unity 프로젝트 저장소
-└── Data/                 ← 이 저장소
+```mermaid
+flowchart LR
+    A[기획자: tables의 엑셀 수정] --> B[DeployData.cmd 실행]
+    B --> C[기존 탭 B1~B5 규칙 읽기]
+    C --> D[타입·범위·중복·참조 검사]
+    D --> E[Windows 임시 폴더에 CSV / JSON / C# 생성]
+    E --> F[데이터 재읽기 비교 + 생성 C# 컴파일]
+    F --> G[클라이언트로 배포]
+    G --> H[임시 데이터·빌드 파일 정리]
+    D -->|오류| X[배포 중단: 파일·탭·셀 오류 표시]
+    F -->|오류| X
+    G -->|실패| R[기존 배포 상태로 원복]
 ```
 
-```bash
-cd Ingwi
-git clone https://github.com/lkhwcf-arch/Human_Ghost-.git
-git clone https://github.com/hyunho9228-web/DataSheet.git Data
+## 실행
+
+.NET 10 SDK가 필요합니다. 기획자는 `DeployData.cmd`를 더블클릭합니다. 오류가 있으면 클라이언트 파일을 바꾸지 않습니다. 배포 중 파일 쓰기에 실패하면 기존 상태로 원복합니다. 원복까지 실패한 경우에만 복구 자료를 Windows 임시 폴더에 보존하고 그 위치를 표시합니다.
+
+검사만 실행하려면 DataSheet 폴더에서 다음 명령을 사용합니다.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File Tools/Run-DataExport.ps1 --check
 ```
 
-데이터 폴더 이름은 `Data`로 통일합니다. Unity 쪽 경로(`../Data`)가 이 이름을 기준으로 합니다.
+설명과 작성 예시는 [기획자 가이드](Docs/PlannerGuide.md)를 참고합니다.
 
-## 저장소 구조
+## 경로와 책임
 
-```
-Data/
-├── README.md
-├── tables/               ← 테이블별 xlsx (파일 이름 = 시트 이름, 상태 3시트만 UnitState로 묶음)
-│   ├── UnitStat.xlsx
-│   ├── Player.xlsx
-│   ├── Monster.xlsx
-│   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (구조 초안, 안의 상태·값은 예시·미확정)
-│   ├── Item.xlsx         ← 아이템 한 시트 (무기·방어구·소모품, ItemType으로 구분)
-│   ├── Buff.xlsx         ← 회복·버프 (14001 약초 회복, Key enum Heal·StatAdd)
-│   ├── Skill.xlsx
-│   ├── Stage.xlsx
-│   ├── StageLayer.xlsx
-│   ├── State.xlsx        ← 애니메이션 상태 Key 목록. Key는 프로젝트 Enum 관리형 데이터로만 씀(자동 배포). Common·Player·Monster·Boss·Required는 안 씀(비고 열)
-│   └── Language.xlsx      ← 표시 텍스트 (예전 String). 언어별 문구 KO·EN 열을 추출함(KO 한글은 이 시트만 예외)
-├── stats/
-│   └── item/<ID>.json    ← 아이템 스탯 JSON (Item 시트 StatJson 열이 가리킴)
-└── (추출 결과 CSV·JSON)   ← 개발팀 추출기가 정함 (예전 csv/ 추출본은 열이 바뀌어 지움)
+```mermaid
+flowchart TD
+    P[같은 부모 폴더] --> D[DataSheet]
+    P --> U[Human_Ghost-]
+    D --> T[tables: 원본 xlsx]
+    D --> S[Tools: 추출·검사·생성·배포 코드]
+    D --> G[Docs: 기획자 설명]
+    S --> C[Assets/Data/Csv]
+    S --> J[Assets/Data/Json]
+    S --> K[Assets/Scripts/Data]
+    U --> C
+    U --> J
+    U --> K
 ```
 
-추출기(xlsx → CSV·JSON)는 개발팀이 만들어 관리합니다.
+배포 경로는 DataSheet를 기준으로 `../Human_Ghost-/Assets/Data/Csv`, `../Human_Ghost-/Assets/Data/Json`, `../Human_Ghost-/Assets/Scripts/Data`입니다. 클라이언트는 검사가 끝난 파일을 신뢰하여 읽고 변환합니다. 이 도구의 검사 코드를 클라이언트에 배포하지 않습니다.
 
-대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 아이템(무기·방어구·소모품)은 `Item` 시트 하나에 모으고 `ItemType`으로 구분합니다. 무기는 지금 2종입니다: 버선칼 6002(시작 무기), 쇠메 6003(완성판). 발골칼은 해체 연출에만 쓰여 아이템이 아니라서 뺐고, 6001 번호는 다시 쓰지 않습니다. 분류 값(ItemType 등)은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다.
+`.datasheet-generated.json`은 클라이언트에 남기는 생성 파일 소유 목록입니다. 다음 배포에서 사라진 시트의 생성 파일을 식별하고 수동 파일 덮어쓰기를 막기 위해 사용합니다. Unity `.meta`는 유지합니다.
 
-구글 시트의 README·Reference·StatCurve·Balance·Formula 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다. **Formula 탭**은 데미지·스킬·버프·회복 계산식의 기획 기준 원본입니다. 개발은 이 탭대로 구현하고, 기획자가 공식을 바꾸면 이 탭이 먼저 바뀝니다.
+DataSheet에는 생성된 CSV·JSON·C# 복사본, outputs, bin, obj를 남기지 않습니다. 실행 배치는 빌드도 임시 폴더에서 수행하고 종료할 때 정리합니다. 원본 `stats/item/*.json`은 기획 예시이며 공식 배포 대상이 아닙니다.
 
-## 시트 규칙
+## 기존 엑셀의 지정 규칙
 
-| 항목 | 규칙 |
-|---|---|
-| 행 구성 | 1~5행 규칙·기능·역할·의도·비고(추출에서 빠짐), 6행 열 이름, 7행부터 데이터 |
-| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(UnitStat, Player, Monster, Buff, Skill, Stage, StageLayer, State, Language) |
-| 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **추출에서 뺌**. ID 열은 비고에 넣을 수 없음 |
-| 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만. **예외: Language 시트 KO 열**(언어 출력용 문구라 추출, 개발팀 확인 10/29) |
-| 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
-| ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 구글 시트 README 탭의 ID 구간 표 |
-| 목록 값 | 세로줄(`\|`)로 구분 (예: `5013\|5014\|5015`) |
-| 플래그 | `Y` / `N` |
-| Active | 켜고 끄는 데이터에만 둠: Stage(스테이지 단위). `N`이면 로더가 건너뜀. 상시 쓰는 나머지 시트에는 Active 열 없음 |
-| 자료형 | 모두 정수 |
-| 비율·확률 | 만분율 (10000 = 100%) |
-| 시간 | ms |
-| 거리·속도 | 타일 × 100 |
-| 방어 | DEF·ArmorPen은 고정 수치. 데미지에서 `max(0, DEF − ArmorPen)`을 그대로 뺌(공식은 구글 시트 Formula 탭) |
-| 표시 텍스트 | 직접 쓰지 않고 Language 시트의 TextID로 참조 |
-| 공통 열 | 같은 뜻의 값은 시트가 달라도 같은 열 이름·같은 순서. 스탯은 모든 유닛이 UnitStat 한 줄(HP, ATK, DEF, Dodge, Crit, CritMult, Poise, MoveSpeed, ArmorPen). 모든 유닛 시트(Player 포함)는 1~3열 `ID, Name, UnitID`, 그 뒤는 시트 전용 열. Monster·BossState·EliteState는 4~11열이 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor`(같은 열 번호), 시트 고유 열은 그 뒤, Note는 맨 끝 |
-
-## 출력 형식 (CSV·JSON)
-
-형식은 시트 2행 기능 앞(`CSV,` / `JSON,`)이 정합니다. 둘 다 **한글 금지**입니다(예외: Language KO 열). 인코딩 문제를 막으려고 내보내는 값에는 영어·숫자·기호만 둡니다(SILENT와 같은 규칙). 한글은 5행 비고에 적은 열(Name·Note 등)에만 씁니다.
-
-CSV
-- UTF-8(BOM 없음), 줄바꿈 LF, 쉼표 구분
-- 첫 줄 = 열 이름(시트 6행, 비고 열 제외), 둘째 줄부터 데이터
-- 값 안에 쉼표가 있으면 큰따옴표로 감쌈(표준 CSV)
-
-JSON (UnitState 세 시트, Item)
-- 한 행 = 오브젝트 하나, 키 = 6행 열 이름(비고 열 제외). 상태 시트는 같은 UnitID끼리 묶어 유닛별 배열로 씀
-- 정확한 모양은 개발팀 추출기가 정함
-
-## 데이터 고치는 순서
-
-1. 구글 시트를 고칩니다. (`tables/`·추출 결과 파일을 직접 고치지 않습니다. 다음에 다시 나눌 때 덮어써집니다.)
-2. 시트를 xlsx로 받아 탭별 파일로 나눠 `tables/`를 덮어씁니다(값만, 설명·계산 탭 제외). 지금은 기획 쪽에서 Claude에게 요청해 나눕니다.
-3. 개발팀 추출기로 `tables/`에서 CSV·JSON을 다시 만듭니다.
-4. `git diff`로 바뀐 값을 확인하고 커밋합니다. 커밋 메시지에 무엇을 왜 바꿨는지 적습니다.
-   예: `Monster: 허수귀 HP 35→40 (시연 난이도 조정)`
-
-## 추출기에 바라는 것 (기획 요청, 구현은 개발팀)
-
-- 위 시트 규칙대로 추출: 6행 열 이름, 7행부터 A열이 빈 첫 행까지, 5행 비고에 적힌 열 제외
-- README·Reference·StatCurve·Balance·Formula 탭 제외
-- 다음 중 하나라도 있으면 그 탭은 추출하지 않고 위치를 알려 줌: A열 ID 중복, 비고에 적힌 열이 6행에 없음, 추출할 칸이나 열 이름에 한글(Language KO 열 제외)
-
-## 아이템 스탯 JSON
-
-Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stats/item/` 안)을 적고, 파일에는 그 아이템이 더해 주는 스탯을 배열로 넣습니다. 아이템마다 스탯 개수와 종류가 달라도 됩니다.
-
-```json
-[
-  { "statType": "ATK", "value": 2 },
-  { "statType": "Crit", "value": 200 }
-]
+```mermaid
+flowchart LR
+    R[기존 README 탭: 기획 설명] --> S[기존 데이터 탭]
+    S --> B1[B1: 설명 + 명시적 타입·검사·상속 규칙]
+    S --> B2[B2: CSV, 또는 JSON,]
+    S --> B5[B5: 제외할 컬럼 목록]
+    S --> H[6행: 컬럼명]
+    H --> V[7행부터 데이터 / A열 첫 빈칸에서 종료]
 ```
 
-| 키 | 값 |
-|---|---|
-| `statType` | enum. 플레이어 스탯 열 이름(UnitStat)과 철자·단위까지 똑같이: `HP`, `ATK`, `DEF`, `Dodge`, `Crit`, `CritMult`, `Poise`, `MoveSpeed`, `ArmorPen`. Buff 시트 StatType도 같은 값 |
-| `value` | 정수. 시트 단위 규칙 그대로(비율·확률은 만분율, 200 = 2%). 음수면 감소 |
+새 규칙 탭이나 외부 스키마 JSON은 필요하지 않습니다. README·Reference·StatCurve·Balance·Formula 탭은 추출하지 않습니다. 기존 README 설명과 각 탭 설명을 유지하면서 B1에 도구가 읽는 명시 규칙을 둡니다. B5의 Name·Note 등 비고 컬럼은 데이터와 클래스 모두에서 제외합니다. 수식은 값으로 저장한 뒤 사용합니다.
 
-- 스탯이 없으면 빈 배열 `[]` (기본 스탯은 UnitStat에 있음)
-- 파일 이름은 아이템 ID: `stats/item/6002.json`. 한글 금지
-- 지금 들어 있는 파일은 6002 버선칼, 6003 쇠메, 6101 버선, 6201 약초입니다. 값은 형식을 보여 주는 예시이며 미확정입니다
-- statType을 늘릴 때는 UnitStat에 열을 먼저 만들고, 이 표와 구글 시트 README 탭 "정해진 단어"를 같이 고칩니다
-- 무기 평타(타수·배율·타이밍)는 데이터로 두지 않습니다. 무기끼리의 차이는 이 스탯 JSON으로만 줍니다(Attack 테이블 삭제, 10/29)
+`tables` 아래 새 xlsx와 새 탭을 자동 탐색합니다. 탭 이름은 전체 파일에서 유일해야 합니다. 타입은 값으로 추측하지 않으므로 새 컬럼에는 B1 지정이 필요합니다. ID는 필수 양의 정수이며 탭 안에서 중복할 수 없습니다. 탭·컬럼명은 그대로 C# 타입·프로퍼티명이 되므로 영문 식별자를 사용합니다.
 
-## 변경 기록
+## 도구 구조
 
-**10/29**
-- SILENT식 숫자 ID로 개편, 탭별 ID 구간 (지운 번호는 다시 쓰지 않음)
-- 구글 시트 제목 `Ingwi_DataTable`. 파일·폴더·탭 이름과 내보내는 값에 한글 금지
-- 저장소를 테이블별 xlsx(`tables/`)로 나눔. 추출기는 개발팀 담당. main에 바로 올림
-- State 분류 변경(Common 9개, Stun·Skill2·Skill3·Bound·PhaseChange 추가)
-- 상태 시트 PlayerState·EliteState·BossState 추가 → `UnitState.xlsx` (구조 예시·미확정). UnitStat Type에 Elite
-- Active 열은 Stage에만 남김
-- 아이템을 Item 한 시트로 합침, ItemType enum, StatJson → `stats/item/<ID>.json`
-- 각 시트 2행 기능 앞에 출력 형식 `CSV,` / `JSON,` 표시
-- State 시트: Key만 프로젝트 Enum 관리형 데이터로 씀(등록→자동 배포). Common·Player·Monster·Boss·Required 열은 안 쓰고 5행 비고에 넣어 추출에서 뺌. 상태 동작은 코드로 구현하고, 특수 상태만 나중에 따로 JSON. UnitState(유닛별 상태 값 JSON)와는 별개
-- String 시트·파일 이름을 Language로 변경(코드의 string 타입과 꼬임). ID 구간 30001~ 그대로
-- REGISTRY 시트 삭제(사용 안 함). 11001~ 번호는 다시 쓰지 않음
-- StageLayer LayerName 한글 → 영어 enum(SKY, FAR, MID, PLAY, FRONT, BACK, ImageKey 끝과 같음)
-- Language KO 열(한글 표시 문구)도 비고 열로 옮겨 추출에서 뺌 → 추출 데이터에 한글 없음
-- (위를 되돌림) 개발팀 답: KO는 언어 출력용이라 추출해도 문제없음 → Language KO 열 다시 추출. EN 열 채움: 인물·요괴·보스·무기·지명 같은 고유명사는 로마자(국어의 로마자 표기법, 막손 Makson, 쇄문아비 Swaemunabi, 버선칼 Beoseonkal, 도화골 Dohwagol), 수식어는 번역(불붙은 허수귀 Burning Heosugwi), 스킬·UI 문구는 영어 번역(결박 가르기 Bind Cleave)
-- 방어를 비율 → 고정 수치로. 데미지 = `max(1, INT((ATK + 아이템 ATK) × 배율 ÷ 10000) − max(0, DEF − ArmorPen))` → 치명타 배율. UnitStat에 `ArmorPen` 열 추가(전원 0), statType enum에도 추가. DEF 값 다시 잡음: 몬스터 0·2·4, 보스 4. 계산식은 구글 시트 Formula 탭(내보내지 않음)
-- Player 약초 열(HerbHeal·HerbCount·HerbUseTime)을 `Buff.xlsx`(14001~, 14001 약초 회복)로 분리. Player 열 순서 = 1~3열 공통(ID, Name, UnitID) 뒤에 플레이어 전용, StartWeapon은 Note 앞
-- 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
-- Item StatJson 값은 경로 대신 파일 이름만(`6002.json`, 개발팀 f44287f)
-- Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
-- 몬스터 공통 열 통일: Monster·BossState·EliteState 모두 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor` (보스 IdleTime → IdleMin·IdleMax, 보스 ExecuteType DAMAGE 추가)
-- Language 30011~30014 맵 이름을 확정 이름으로: 도화골 Dohwagol, 산길 초입구 Mountain Trail Entrance, 산길 위 바위 협곡 Rocky Gorge Above the Trail, 관문 The Gate
-
-## Unity 연동 (제안, 메인 개발과 확정 필요)
-
-아래는 제안입니다. 실제 방식은 나영민 님과 정합니다.
-
-**에디터에서는 `../Data/csv`를 바로 읽고, 빌드할 때만 `StreamingAssets`로 복사**하는 방식을 권합니다.
-
-- 에디터: `Path.Combine(Application.dataPath, "../../Data/csv")`
-  (`Application.dataPath` = `Human_Ghost-/Assets` 이므로 두 단계 위가 메인 폴더)
-- 빌드: `IPreprocessBuildWithReport`에서 `../Data/csv/*.csv`를 `Assets/StreamingAssets/Data/`로 복사, 빌드 뒤 지움.
-  런타임은 `Path.Combine(Application.streamingAssetsPath, "Data")`에서 읽음
-- 프로젝트 저장소 `.gitignore`에 `Assets/StreamingAssets/Data/` 추가 → 데이터가 프로젝트 깃에 들어가지 않음
-
-```csharp
-static string DataDir =>
-#if UNITY_EDITOR
-    System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "../../Data/csv"));
-#else
-    System.IO.Path.Combine(Application.streamingAssetsPath, "Data");
-#endif
+```mermaid
+flowchart TD
+    P[Program: 작업 순서] --> I[Input: 엑셀 값과 위치 읽기]
+    I --> S[Schema: B1 지정 규칙 해석]
+    S --> V[Validation: 타입·값·참조·관계 검사]
+    V --> C[CsvExporter]
+    V --> J[JsonExporter]
+    V --> G[CodeGenerator]
+    C --> O[출력 재검사]
+    J --> O
+    G --> K[GeneratedCodeCompiler]
+    O --> D[DeploymentService]
+    K --> D
+    M[Common: 값 변환·이름 정책] --> S
+    M --> V
+    M --> C
+    M --> G
 ```
 
-다른 방법과 비교:
+읽기 어댑터, 규칙, 검사, 형식별 추출, 클래스 생성, 파일 배포를 분리합니다. 값 변환과 출력 경로는 공통 정책을 사용합니다. IWorkbookReader·ITableSerializer·ITableRule로 책임 경계를 드러내며, 현재 배포 작업은 순차 처리합니다. 이 동기 도구 내부 호출을 전역 이벤트로 바꾸지 않습니다.
 
-| 방법 | 장점 | 단점 |
-|---|---|---|
-| **../Data 읽기 + 빌드 때 복사 (권장)** | 프로젝트 깃에 데이터가 전혀 안 섞임, 시트 고치고 바로 플레이 확인 | 빌드 스크립트 하나 필요, 폴더 배치 규칙을 모두 지켜야 함 |
-| git submodule | 프로젝트가 데이터 버전을 커밋으로 고정 | 데이터 바꿀 때마다 프로젝트에도 커밋 생김(목적과 반대), 서브모듈 사용법 학습 필요 |
-| CSV를 StreamingAssets에 직접 복사해 커밋 | 설정 없음 | 데이터 변경이 프로젝트 깃에 섞임 |
+## 생성 데이터와 상속
 
-지스타 제출 빌드(11/18)에 들어간 데이터는 이 저장소에 태그(`gstar-2026`)로 남겨 두면 나중에 같은 상태로 되돌릴 수 있습니다.
+```mermaid
+classDiagram
+    CharacterStat <|-- UnitStat
+    CharacterStat <|-- Player
+    CharacterStat <|-- Monster
+    CharacterStat <|-- Boss
+    CharacterStat <|-- Elite
+    Boss o-- BossState
+    Elite o-- EliteState
+    class CharacterStat {
+        <<abstract>>
+        공통 스탯
+    }
+    class UnitStat {
+        ID / TextID / Type / Tier
+    }
+    class Player {
+        ID / UnitID / 플레이어 특수 스탯
+    }
+    class Monster {
+        ID / UnitID / 몬스터 특수 스탯
+    }
+```
+
+공통 HP·ATK·DEF·Dodge·Crit·CritMult·Poise·MoveSpeed·ArmorPen은 CharacterStat에 한 번만 선언합니다. 하위 클래스는 개별 스탯만 선언합니다. Player·Monster 생성자는 UnitStat의 공통 값을 전달받습니다. Boss·Elite는 공통 정의와 단계별 상태 목록을 받습니다. 정의 데이터는 읽기 전용 프로퍼티로 생성하고 변경 가능한 게임 중 상태와 분리합니다.
+
+클래스 파일·클래스명은 탭 이름이며 프로퍼티명은 컬럼명입니다. 생성할 때마다 전체 파일을 새로 만들어 배포하므로 컬럼 추가·삭제도 반영됩니다. State.Key와 ID로 StateKey enum도 생성합니다. 생성 코드는 직접 수정하지 않습니다.
+
+| 현재 형식 | 대상 |
+| --- | --- |
+| CSV 9개 | Buff, Language, Monster, Player, Skill, Stage, StageLayer, State, UnitStat |
+| JSON 4개 | Item, PlayerState, BossState, EliteState |
+| C# 17개 | 탭별 13개 + CharacterStat, Boss, Elite, StateKey |
+
+Item JSON은 객체 배열이며 상태 JSON 3개는 UnitID별 `States` 배열로 묶습니다. 빈 상태 시트는 `[]`입니다. 행 ID와 캐릭터 UnitID를 구분하며 BossState의 여러 Phase 행을 여러 보스로 해석하지 않습니다.
+
+## 수치와 인코딩
+
+기본 수치는 Int32 정수이고 시간은 밀리세컨드입니다. 확률은 분모 10000으로 Dodge·Crit 등 확률값은 0~10000입니다. 배율은 10000을 기준으로 하되 CritMult·DamageMult·Parallax처럼 10000을 넘는 항목은 별도 최대값이 없으면 허용합니다. 이동 관련 값은 시트의 고정 소수 단위(tile_x100 등)를 따르며 엔진 표현으로 변환하는 책임은 클라이언트 어댑터에 둡니다.
+
+원본 Flag는 Y/N이며 CSV는 Y/N, JSON과 C#은 bool입니다. 모든 텍스트 데이터와 생성 코드는 UTF-8입니다. CSV는 BOM 없이 LF를 사용합니다. 주석과 설명은 한국어로 작성합니다.
+
+## 현재 범위와 이후 작업
+
+추출·검사·자동 생성·자동 배포가 현재 구현 범위입니다. 게임의 데이터 기반 이벤트 흐름, 상태 Factory, Observer, Facade와 상태 동작 연결은 클라이언트 기능 작업에서 연결합니다. 팩토리는 상태 구성에 사용하며 캐릭터 자체의 팩토리를 추가하지 않습니다. 캐릭터는 상속 구조와 목록으로 관리합니다.
+
+Buff는 현재 데이터 형태만 처리합니다. 실제 효과 적용, 스폰 JSON 원본·추출, 몬스터 풀링 설정, 예시 아이템 스탯 JSON의 공식 생성 규칙은 확정 후 추가합니다. 보류된 스폰 파일이나 예시 StatJson의 실제 존재 여부를 검사하지 않습니다. 이번 작업에서 네트워크 기능을 추가하지 않습니다.
+
+검사 코드 실행: `dotnet run --project Tools/DataExporter.Checks` (개발용 빌드 캐시는 Windows 임시 폴더에 위치).
