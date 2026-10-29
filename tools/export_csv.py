@@ -8,7 +8,8 @@
 
 시트 규칙(README 참고): 1~5행은 설명(규칙·기능·역할·의도·비고), 6행 = 열 이름,
 7행부터 데이터. A열이 빈 첫 행에서 읽기를 멈춤(그 아래 계산·JSON 예시는 데이터가 아님).
-내보내면서 검사하는 것: A열 ID 중복, 빈 열 이름.
+5행 비고(B5)에 적힌 열(예: "Name, Note")은 기획용이라 CSV에서 뺌.
+내보내면서 검사하는 것: A열 ID 중복, 빈 열 이름, 비고에 적혔는데 6행에 없는 열.
 """
 import csv
 import sys
@@ -17,6 +18,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 HEADER_ROW = 6
+NOTE_ROW = 5
 # 설명·계산용 탭은 내보내지 않음
 SKIP_SHEETS = {"README", "Reference", "StatCurve", "Balance"}
 
@@ -31,6 +33,15 @@ def cell_text(v):
     return str(v)
 
 
+def note_columns(ws):
+    """5행 비고에 적힌, 코드가 읽지 않는 열 이름들."""
+    label, value = (cell_text(v) for v in next(ws.iter_rows(
+        min_row=NOTE_ROW, max_row=NOTE_ROW, max_col=2, values_only=True)))
+    if label != "비고":
+        return []
+    return [c.strip() for c in value.split(",") if c.strip()]
+
+
 def export_sheet(ws):
     rows = list(ws.iter_rows(min_row=HEADER_ROW, values_only=True))
     if not rows:
@@ -43,6 +54,14 @@ def export_sheet(ws):
     if "" in header:
         errors.append(f"6행에 빈 열 이름이 있음 (열 {header.index('') + 1})")
 
+    drop = note_columns(ws)
+    for c in drop:
+        if c not in header:
+            errors.append(f"5행 비고의 열 {c}이(가) 6행에 없음")
+        elif header.index(c) == 0:
+            errors.append(f"5행 비고에 ID 열({c})이 있음")
+    keep = [j for j, h in enumerate(header) if h not in drop]
+
     data, seen = [], {}
     for i, r in enumerate(rows[1:], start=HEADER_ROW + 1):
         vals = [cell_text(v) for v in r[:width]]
@@ -54,8 +73,8 @@ def export_sheet(ws):
             errors.append(f"{i}행: ID {rid} 중복 ({seen[rid]}행과 같음)")
         else:
             seen[rid] = i
-        data.append(vals)
-    return [header] + data, errors
+        data.append([vals[j] for j in keep])
+    return [[header[j] for j in keep]] + data, errors
 
 
 def main():
@@ -75,7 +94,7 @@ def main():
             failed = True
             continue
         path = OUT_DIR / f"{ws.title}.csv"
-        with open(path, "w", encoding="utf-8", newline="") as f:
+        with open(path, "w", encoding="utf-8-sig", newline="") as f:
             csv.writer(f, lineterminator="\n").writerows(table)
         print(f"{ws.title}: {len(table) - 1}행 -> {path.relative_to(OUT_DIR.parent)}")
     if failed:

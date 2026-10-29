@@ -1,2 +1,2 @@
-ID,Name,TextID,WeaponID,AttackID,Cooldown,UnlockType,Effect,Active,Note
-7001,결박 가르기,30010,6001,5006,8000,ROOM_LEDGER,CUT_BIND,Y,"장부방에서 해금, 결박 문·사슬 끊기"
+﻿ID,TextID,WeaponID,AttackID,Cooldown,UnlockType,Effect,Active
+7001,30010,6001,5006,8000,ROOM_LEDGER,CUT_BIND,Y

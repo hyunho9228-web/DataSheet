@@ -1,4 +1,4 @@
-ID,Name,TextID,InGstar,AttackIDs,SkillID,Acquire,AcquireAnim,Active,Note
-6001,발골칼,30007,Y,5001|5002|5003|5004,7001,START,ANIM_ACQ_6001,Y,"시작 무기. 결박 가르기는 장부방 해금(예외, 10/28)"
-6002,버선칼,30008,N,,,STORY,ANIM_ACQ_6002,Y,"완성판, 획득 시 스킬 해금"
-6003,쇠메,30009,N,,,STORY,ANIM_ACQ_6003,Y,"완성판, 획득 시 스킬 해금"
+﻿ID,TextID,InGstar,AttackIDs,SkillID,Acquire,AcquireAnim,Active
+6001,30007,Y,5001|5002|5003|5004,7001,START,ANIM_ACQ_6001,Y
+6002,30008,N,,,STORY,ANIM_ACQ_6002,Y
+6003,30009,N,,,STORY,ANIM_ACQ_6003,Y
