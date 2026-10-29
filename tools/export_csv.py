@@ -9,9 +9,12 @@
 시트 규칙(README 참고): 1~5행은 설명(규칙·기능·역할·의도·비고), 6행 = 열 이름,
 7행부터 데이터. A열이 빈 첫 행에서 읽기를 멈춤(그 아래 계산·JSON 예시는 데이터가 아님).
 5행 비고(B5)에 적힌 열(예: "Name, Note")은 기획용이라 CSV에서 뺌.
-내보내면서 검사하는 것: A열 ID 중복, 빈 열 이름, 비고에 적혔는데 6행에 없는 열.
+CSV에는 한글이 들어가면 안 됨(인코딩 문제 예방). 한글은 비고 열이나 String 탭에만 둔다.
+내보내면서 검사하는 것: A열 ID 중복, 빈 열 이름, 비고에 적혔는데 6행에 없는 열,
+내보낼 칸의 한글.
 """
 import csv
+import re
 import sys
 from pathlib import Path
 
@@ -21,6 +24,8 @@ HEADER_ROW = 6
 NOTE_ROW = 5
 # 설명·계산용 탭은 내보내지 않음
 SKIP_SHEETS = {"README", "Reference", "StatCurve", "Balance"}
+
+HANGUL = re.compile("[\u1100-\u11ff\u3130-\u318f\uac00-\ud7a3]")
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "csv"
 
@@ -61,6 +66,9 @@ def export_sheet(ws):
         elif header.index(c) == 0:
             errors.append(f"5행 비고에 ID 열({c})이 있음")
     keep = [j for j, h in enumerate(header) if h not in drop]
+    for j in keep:
+        if HANGUL.search(header[j]):
+            errors.append(f"6행 열 이름에 한글: {header[j]}")
 
     data, seen = [], {}
     for i, r in enumerate(rows[1:], start=HEADER_ROW + 1):
@@ -73,6 +81,9 @@ def export_sheet(ws):
             errors.append(f"{i}행: ID {rid} 중복 ({seen[rid]}행과 같음)")
         else:
             seen[rid] = i
+        for j in keep:
+            if HANGUL.search(vals[j]):
+                errors.append(f"{i}행 {header[j]} 열에 한글: {vals[j]}")
         data.append([vals[j] for j in keep])
     return [[header[j] for j in keep]] + data, errors
 
@@ -94,7 +105,7 @@ def main():
             failed = True
             continue
         path = OUT_DIR / f"{ws.title}.csv"
-        with open(path, "w", encoding="utf-8-sig", newline="") as f:
+        with open(path, "w", encoding="utf-8", newline="") as f:
             csv.writer(f, lineterminator="\n").writerows(table)
         print(f"{ws.title}: {len(table) - 1}행 -> {path.relative_to(OUT_DIR.parent)}")
     if failed:

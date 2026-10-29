@@ -1,4 +1,4 @@
-﻿ID,Key,Common,Player,Monster,Boss,Required,Active
+ID,Key,Common,Player,Monster,Boss,Required,Active
 10001,Idle,Y,Y,Y,Y,Y,Y
 10002,Walk,Y,Y,Y,Y,Y,Y
 10003,Hit,Y,Y,Y,Y,Y,Y

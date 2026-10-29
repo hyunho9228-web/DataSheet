@@ -46,7 +46,7 @@ Data/
 │   ├── State.csv
 │   └── String.csv
 └── tools/
-    └── export_csv.py     ← xlsx → CSV 변환(비고 열 제외) + ID 검사
+    └── export_csv.py     ← xlsx → CSV 변환(비고 열 제외) + ID·한글 검사
 ```
 
 README·Reference·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내보내지 않습니다.
@@ -57,6 +57,7 @@ README·Reference·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내�
 |---|---|
 | 행 구성 | 1~5행 규칙·기능·역할·의도·비고(CSV에서 빠짐), 6행 열 이름, 7행부터 데이터 |
 | 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **CSV에서 뺌**. ID 열은 비고에 넣을 수 없음 |
+| 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
 | ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 REGISTRY의 IDRange |
 | 목록 값 | 세로줄(`\|`)로 구분 (예: `5013\|5014\|5015`) |
@@ -70,11 +71,10 @@ README·Reference·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내�
 
 ## CSV 형식
 
-- **UTF-8 BOM**, 줄바꿈 LF, 쉼표 구분. BOM이 있어야 엑셀에서 바로 열어도 한글이 안 깨짐
+- UTF-8(BOM 없음), 줄바꿈 LF, 쉼표 구분
 - 첫 줄 = 열 이름(시트 6행, 비고 열 제외), 둘째 줄부터 데이터
-- Unity 로더 주의: `File.ReadAllText`·`File.ReadAllLines`·`StreamReader`는 BOM을 알아서 지움.
-  `File.ReadAllBytes` + `Encoding.UTF8.GetString`으로 읽으면 첫 열 이름이 `\uFEFFID`가 되니,
-  그 방식이면 `TrimStart('\uFEFF')` 하거나 위 함수들을 쓸 것
+- **한글 금지.** 인코딩 문제를 막으려고 CSV에는 영어·숫자·기호만 둡니다(SILENT와 같은 규칙).
+  한글은 5행 비고에 적은 열(Name·Note 등)에만 쓰고, 내보낼 칸에 한글이 있으면 그 탭은 내보내지 않고 오류를 보여줍니다.
 - 값 안에 쉼표가 있으면 큰따옴표로 감쌈(표준 CSV)
 
 ## 데이터 고치는 순서
@@ -86,7 +86,7 @@ README·Reference·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내�
    pip install openpyxl
    python tools/export_csv.py source/인귀_데이터테이블.xlsx
    ```
-   ID가 겹치거나, 비고에 적힌 열이 6행에 없으면 해당 탭은 내보내지 않고 오류를 보여줍니다.
+   ID가 겹치거나, 비고에 적힌 열이 6행에 없거나, 내보낼 칸에 한글이 있으면 해당 탭은 내보내지 않고 오류를 보여줍니다.
 4. `git diff`로 바뀐 값을 확인하고 커밋합니다. 커밋 메시지에 무엇을 왜 바꿨는지 적습니다.
    예: `Monster: 허수귀 HP 35→40 (시연 난이도 조정)`
 

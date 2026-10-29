@@ -1,2 +1,2 @@
-﻿ID,UnitID,StaminaMax,StaminaRegen,StaminaRegenDelay,RollDistance,RollTime,RollIFrame,RollStamina,JumpHeight,HitStunTime,HitIFrame,HerbHeal,HerbCount,HerbUseTime,HangAuto,StartWeapon,CritHitStunTime,LandFallHeight,LandTime,InputBuffer,Active
+ID,UnitID,StaminaMax,StaminaRegen,StaminaRegenDelay,RollDistance,RollTime,RollIFrame,RollStamina,JumpHeight,HitStunTime,HitIFrame,HerbHeal,HerbCount,HerbUseTime,HangAuto,StartWeapon,CritHitStunTime,LandFallHeight,LandTime,InputBuffer,Active
 2001,1001,100,45,500,300,500,300,20,300,300,600,40,3,800,Y,6001,500,500,200,150,Y

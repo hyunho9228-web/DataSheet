@@ -1,4 +1,4 @@
-﻿ID,OwnerID,TextID,StateID,DamageMult,PoiseDamage,Startup,ActiveTime,Recovery,ComboWindow,Stamina,Dodgeable,HitStop,Active
+ID,OwnerID,TextID,StateID,DamageMult,PoiseDamage,Startup,ActiveTime,Recovery,ComboWindow,Stamina,Dodgeable,HitStop,Active
 5001,1001,30015,10004,10000,10,120,80,250,200,12,Y,50,Y
 5002,1001,30016,10005,10000,10,120,80,250,200,12,Y,50,Y
 5003,1001,30017,10006,18000,20,200,100,400,0,12,Y,50,Y

@@ -1,4 +1,4 @@
-﻿ID,TextID,Type,Tier,HP,ATK,DEF,Dodge,Crit,CritMult,Poise,MoveSpeed,Active
+ID,TextID,Type,Tier,HP,ATK,DEF,Dodge,Crit,CritMult,Poise,MoveSpeed,Active
 1001,30001,Player,,100,10,0,500,1000,15000,0,600,Y
 1002,30002,Monster,1,35,20,0,300,0,15000,40,300,Y
 1003,30003,Monster,2,50,26,500,400,0,15000,50,250,Y
