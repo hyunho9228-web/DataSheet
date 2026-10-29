@@ -38,6 +38,7 @@ Data/
 │   ├── Monster.xlsx
 │   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (구조 초안, 안의 상태·값은 예시·미확정)
 │   ├── Item.xlsx         ← 아이템 한 시트 (무기·방어구·소모품, ItemType으로 구분)
+│   ├── Buff.xlsx         ← 회복·버프 (14001 약초 회복, Key enum Heal·StatAdd)
 │   ├── Skill.xlsx
 │   ├── Stage.xlsx
 │   ├── StageLayer.xlsx
@@ -52,14 +53,14 @@ Data/
 
 대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 아이템(무기·방어구·소모품)은 `Item` 시트 하나에 모으고 `ItemType`으로 구분합니다. 무기는 지금 2종입니다: 버선칼 6002(시작 무기), 쇠메 6003(완성판). 발골칼은 해체 연출에만 쓰여 아이템이 아니라서 뺐고, 6001 번호는 다시 쓰지 않습니다. 분류 값(ItemType 등)은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다.
 
-구글 시트의 README·Reference·StatCurve·Balance 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다.
+구글 시트의 README·Reference·StatCurve·Balance·Formula 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다. **Formula 탭**은 데미지·스킬·버프·회복 계산식의 기획 기준 원본입니다. 개발은 이 탭대로 구현하고, 기획자가 공식을 바꾸면 이 탭이 먼저 바뀝니다.
 
 ## 시트 규칙
 
 | 항목 | 규칙 |
 |---|---|
 | 행 구성 | 1~5행 규칙·기능·역할·의도·비고(추출에서 빠짐), 6행 열 이름, 7행부터 데이터 |
-| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(UnitStat, Player, Monster, Skill, Stage, StageLayer, State, Language) |
+| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(UnitStat, Player, Monster, Buff, Skill, Stage, StageLayer, State, Language) |
 | 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **추출에서 뺌**. ID 열은 비고에 넣을 수 없음 |
 | 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
@@ -71,8 +72,9 @@ Data/
 | 비율·확률 | 만분율 (10000 = 100%) |
 | 시간 | ms |
 | 거리·속도 | 타일 × 100 |
+| 방어 | DEF·ArmorPen은 고정 수치. 데미지에서 `max(0, DEF − ArmorPen)`을 그대로 뺌(공식은 구글 시트 Formula 탭) |
 | 표시 텍스트 | 직접 쓰지 않고 Language 시트의 TextID로 참조 |
-| 공통 열 | 같은 뜻의 값은 시트가 달라도 같은 열 이름·같은 순서. 스탯은 모든 유닛이 UnitStat 한 줄(HP, ATK, DEF, Dodge, Crit, CritMult, Poise, MoveSpeed). 모든 유닛 시트는 1~3열 `ID, Name, UnitID`. Monster·BossState·EliteState는 4~11열이 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor`(같은 열 번호), 시트 고유 열은 그 뒤, Note는 맨 끝 |
+| 공통 열 | 같은 뜻의 값은 시트가 달라도 같은 열 이름·같은 순서. 스탯은 모든 유닛이 UnitStat 한 줄(HP, ATK, DEF, Dodge, Crit, CritMult, Poise, MoveSpeed, ArmorPen). 모든 유닛 시트(Player 포함)는 1~3열 `ID, Name, UnitID`, 그 뒤는 시트 전용 열. Monster·BossState·EliteState는 4~11열이 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor`(같은 열 번호), 시트 고유 열은 그 뒤, Note는 맨 끝 |
 
 ## 출력 형식 (CSV·JSON)
 
@@ -98,7 +100,7 @@ JSON (UnitState 세 시트, Item)
 ## 추출기에 바라는 것 (기획 요청, 구현은 개발팀)
 
 - 위 시트 규칙대로 추출: 6행 열 이름, 7행부터 A열이 빈 첫 행까지, 5행 비고에 적힌 열 제외
-- README·Reference·StatCurve·Balance 탭 제외
+- README·Reference·StatCurve·Balance·Formula 탭 제외
 - 다음 중 하나라도 있으면 그 탭은 추출하지 않고 위치를 알려 줌: A열 ID 중복, 비고에 적힌 열이 6행에 없음, 추출할 칸이나 열 이름에 한글
 
 ## 아이템 스탯 JSON
@@ -114,7 +116,7 @@ Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stat
 
 | 키 | 값 |
 |---|---|
-| `statType` | enum. 플레이어 스탯 열 이름(UnitStat)과 철자·단위까지 똑같이: `HP`, `ATK`, `DEF`, `Dodge`, `Crit`, `CritMult`, `Poise`, `MoveSpeed` |
+| `statType` | enum. 플레이어 스탯 열 이름(UnitStat)과 철자·단위까지 똑같이: `HP`, `ATK`, `DEF`, `Dodge`, `Crit`, `CritMult`, `Poise`, `MoveSpeed`, `ArmorPen`. Buff 시트 StatType도 같은 값 |
 | `value` | 정수. 시트 단위 규칙 그대로(비율·확률은 만분율, 200 = 2%). 음수면 감소 |
 
 - 스탯이 없으면 빈 배열 `[]` (기본 스탯은 UnitStat에 있음)
@@ -139,6 +141,8 @@ Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stat
 - REGISTRY 시트 삭제(사용 안 함). 11001~ 번호는 다시 쓰지 않음
 - StageLayer LayerName 한글 → 영어 enum(SKY, FAR, MID, PLAY, FRONT, BACK, ImageKey 끝과 같음)
 - Language KO 열(한글 표시 문구)도 비고 열로 옮겨 추출에서 뺌 → 추출 데이터에 한글 없음
+- 방어를 비율 → 고정 수치로. 데미지 = `max(1, INT((ATK + 아이템 ATK) × 배율 ÷ 10000) − max(0, DEF − ArmorPen))` → 치명타 배율. UnitStat에 `ArmorPen` 열 추가(전원 0), statType enum에도 추가. DEF 값 다시 잡음: 몬스터 0·2·4, 보스 4. 계산식은 구글 시트 Formula 탭(내보내지 않음)
+- Player 약초 열(HerbHeal·HerbCount·HerbUseTime)을 `Buff.xlsx`(14001~, 14001 약초 회복)로 분리. Player 열 순서 = 1~3열 공통(ID, Name, UnitID) 뒤에 플레이어 전용, StartWeapon은 Note 앞
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
 - Item StatJson 값은 경로 대신 파일 이름만(`6002.json`, 개발팀 f44287f)
 - Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
