@@ -42,7 +42,7 @@ Data/
 │   ├── Skill.xlsx
 │   ├── Stage.xlsx
 │   ├── StageLayer.xlsx
-│   ├── State.xlsx        ← 애니메이션 상태 Key 등록 목록(Key만 자동 배포에 씀, 나머지 열은 참고용, 동작은 코드)
+│   ├── State.xlsx        ← 애니메이션 상태 Key 목록. Key는 프로젝트 Enum 관리형 데이터로만 씀(자동 배포). Common·Player·Monster·Boss·Required는 안 씀(비고 열)
 │   └── String.xlsx
 ├── stats/
 │   └── item/<ID>.json    ← 아이템 스탯 JSON (Item 시트 StatJson 열이 가리킴)
@@ -135,7 +135,7 @@ Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stat
 - Active 열은 REGISTRY·Stage에만 남김
 - 아이템을 Item 한 시트로 합침, ItemType enum, StatJson → `stats/item/<ID>.json`
 - 각 시트 2행 기능 앞에 출력 형식 `CSV,` / `JSON,` 표시
-- State 시트: 쓰는 것은 애니메이션 Key 등록→자동 배포뿐, 나머지 열은 참고용. 상태 동작은 코드로 구현하고, 특수 상태만 나중에 따로 JSON. UnitState(유닛별 상태 값 JSON)와는 별개
+- State 시트: Key만 프로젝트 Enum 관리형 데이터로 씀(등록→자동 배포). Common·Player·Monster·Boss·Required 열은 안 쓰고 5행 비고에 넣어 추출에서 뺌. 상태 동작은 코드로 구현하고, 특수 상태만 나중에 따로 JSON. UnitState(유닛별 상태 값 JSON)와는 별개
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
 - Item StatJson 값은 경로 대신 파일 이름만(`6002.json`, 개발팀 f44287f)
 - Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
