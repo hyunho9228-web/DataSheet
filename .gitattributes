@@ -1,0 +1,4 @@
+# CSV는 줄바꿈을 LF로 고정해 OS별 diff 노이즈를 막음
+*.csv text eol=lf
+*.md  text eol=lf
+*.py  text eol=lf

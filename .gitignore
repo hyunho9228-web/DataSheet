@@ -1,0 +1,7 @@
+# 원본 엑셀은 저장소에 넣지 않음 (구글 시트가 원본)
+*.xlsx
+*.xls
+~$*
+__pycache__/
+.DS_Store
+Thumbs.db
