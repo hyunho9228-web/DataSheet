@@ -38,7 +38,6 @@ Data/
 │   ├── Player.xlsx
 │   ├── Monster.xlsx
 │   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (구조 초안, 안의 상태·값은 예시·미확정)
-│   ├── Attack.xlsx
 │   ├── Item.xlsx         ← 아이템 한 시트 (무기·방어구·소모품, ItemType으로 구분)
 │   ├── Skill.xlsx
 │   ├── Stage.xlsx
@@ -61,7 +60,7 @@ Data/
 | 항목 | 규칙 |
 |---|---|
 | 행 구성 | 1~5행 규칙·기능·역할·의도·비고(추출에서 빠짐), 6행 열 이름, 7행부터 데이터 |
-| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(REGISTRY, UnitStat, Player, Monster, Attack, Skill, Stage, StageLayer, State, String) |
+| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(REGISTRY, UnitStat, Player, Monster, Skill, Stage, StageLayer, State, String) |
 | 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **추출에서 뺌**. ID 열은 비고에 넣을 수 없음 |
 | 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
@@ -74,6 +73,7 @@ Data/
 | 시간 | ms |
 | 거리·속도 | 타일 × 100 |
 | 표시 텍스트 | 직접 쓰지 않고 String 키로 참조 |
+| 공통 열 | 같은 뜻의 값은 시트가 달라도 같은 열 이름·같은 순서. 스탯은 모든 유닛이 UnitStat 한 줄(HP, ATK, DEF, Dodge, Crit, CritMult, Poise, MoveSpeed). 몬스터 행동은 Monster·BossState·EliteState가 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor`를 같은 순서로 가짐 |
 
 ## 출력 형식 (CSV·JSON)
 
@@ -115,13 +115,14 @@ Item 시트의 `StatJson` 열에 파일 경로(저장소 기준)를 적고, 파�
 
 | 키 | 값 |
 |---|---|
-| `statType` | enum. UnitStat 열 이름과 같음: `HP`, `ATK`, `DEF`, `Dodge`, `Crit`, `CritMult`, `Poise`, `MoveSpeed` |
+| `statType` | enum. 플레이어 스탯 열 이름(UnitStat)과 철자·단위까지 똑같이: `HP`, `ATK`, `DEF`, `Dodge`, `Crit`, `CritMult`, `Poise`, `MoveSpeed` |
 | `value` | 정수. 시트 단위 규칙 그대로(비율·확률은 만분율, 200 = 2%). 음수면 감소 |
 
 - 스탯이 없으면 빈 배열 `[]` (기본 스탯은 UnitStat에 있음)
 - 파일 이름은 아이템 ID: `stats/item/6002.json`. 한글 금지
 - 지금 들어 있는 파일은 6002 버선칼, 6003 쇠메, 6101 버선, 6201 약초입니다. 값은 형식을 보여 주는 예시이며 미확정입니다
-- statType을 늘릴 때는 이 표와 구글 시트 README 탭 "정해진 단어"를 같이 고칩니다
+- statType을 늘릴 때는 UnitStat에 열을 먼저 만들고, 이 표와 구글 시트 README 탭 "정해진 단어"를 같이 고칩니다
+- 무기 평타(타수·배율·타이밍)는 데이터로 두지 않습니다. 무기끼리의 차이는 이 스탯 JSON으로만 줍니다(Attack 테이블 삭제, 10/29)
 
 ## 변경 기록
 
@@ -135,6 +136,8 @@ Item 시트의 `StatJson` 열에 파일 경로(저장소 기준)를 적고, 파�
 - 아이템을 Item 한 시트로 합침, ItemType enum, StatJson → `stats/item/<ID>.json`
 - 각 시트 2행 기능 앞에 출력 형식 `CSV,` / `JSON,` 표시
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
+- Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
+- 몬스터 공통 열 통일: Monster·BossState·EliteState 모두 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor` (보스 IdleTime → IdleMin·IdleMax, 보스 ExecuteType DAMAGE 추가)
 
 ## Unity 연동 (제안, 메인 개발과 확정 필요)
 
