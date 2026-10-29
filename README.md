@@ -104,7 +104,7 @@ JSON (UnitState 세 시트, Item)
 
 ## 아이템 스탯 JSON
 
-Item 시트의 `StatJson` 열에 파일 경로(저장소 기준)를 적고, 파일에는 그 아이템이 더해 주는 스탯을 배열로 넣습니다. 아이템마다 스탯 개수와 종류가 달라도 됩니다.
+Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stats/item/` 안)을 적고, 파일에는 그 아이템이 더해 주는 스탯을 배열로 넣습니다. 아이템마다 스탯 개수와 종류가 달라도 됩니다.
 
 ```json
 [
@@ -136,6 +136,7 @@ Item 시트의 `StatJson` 열에 파일 경로(저장소 기준)를 적고, 파�
 - 아이템을 Item 한 시트로 합침, ItemType enum, StatJson → `stats/item/<ID>.json`
 - 각 시트 2행 기능 앞에 출력 형식 `CSV,` / `JSON,` 표시
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
+- Item StatJson 값은 경로 대신 파일 이름만(`6002.json`, 개발팀 f44287f)
 - Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
 - 몬스터 공통 열 통일: Monster·BossState·EliteState 모두 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor` (보스 IdleTime → IdleMin·IdleMax, 보스 ExecuteType DAMAGE 추가)
 
