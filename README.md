@@ -3,9 +3,11 @@
 인귀(Unity 프로젝트) 데이터 테이블 전용 저장소입니다.
 데이터를 고친 커밋이 게임 프로젝트 저장소(`lkhwcf-arch/Human_Ghost-`)에 섞이지 않도록 따로 둡니다.
 
-- 원본: [데이터 테이블 구글 시트](https://docs.google.com/spreadsheets/d/1Xn7PQsVVOY2dE_aiTLcrFxN08fgGxDH5hpaEGJBBbG8/edit)
-- 게임이 읽는 것은 `csv/`의 탭별 CSV입니다.
-- `source/인귀_데이터테이블.xlsx`는 시트를 통째로 받은 스냅샷입니다. CSV와 같은 시점의 시트 전체(수식·설명 탭 포함)를 남기려고 같이 커밋합니다. xlsx는 바이너리라 diff가 안 보이니 변경 확인은 CSV로 합니다.
+- 원본: [Ingwi_DataTable 구글 시트](https://docs.google.com/spreadsheets/d/1Xn7PQsVVOY2dE_aiTLcrFxN08fgGxDH5hpaEGJBBbG8/edit)
+- 기획은 구글 시트 하나에서 고칩니다(탭끼리 수식·밸런스 계산이 이어져 있어서).
+- 저장소에는 그 시트를 **테이블별 xlsx 파일**(`tables/`)로 나눠 올립니다. 값만 들어 있고 수식은 없습니다.
+- `csv/`는 그 파일들을 개발팀 추출기로 뽑은 결과입니다.
+- 파일·폴더·탭 이름에는 한글을 쓰지 않습니다.
 
 ## 로컬 폴더 구성
 
@@ -30,9 +32,20 @@ git clone https://github.com/hyunho9228-web/DataSheet.git Data
 ```
 Data/
 ├── README.md
-├── source/
-│   └── 인귀_데이터테이블.xlsx ← 시트 전체 스냅샷 (CSV와 같은 시점)
-├── csv/                  ← 게임이 읽는 테이블 (탭 1개 = 파일 1개)
+├── tables/               ← 테이블별 xlsx (파일 이름 = REGISTRY의 Sheet 값)
+│   ├── REGISTRY.xlsx     ← 로더가 맨 먼저 읽음 (시트 목록·ID 구간·읽는 순서)
+│   ├── UnitStat.xlsx
+│   ├── Player.xlsx
+│   ├── Monster.xlsx
+│   ├── Boss.xlsx
+│   ├── Attack.xlsx
+│   ├── Weapon.xlsx
+│   ├── Skill.xlsx
+│   ├── Stage.xlsx
+│   ├── StageLayer.xlsx
+│   ├── State.xlsx
+│   └── String.xlsx
+├── csv/                  ← 추출 결과 (xlsx 1개 = CSV 1개)
 │   ├── REGISTRY.csv      ← 로더가 맨 먼저 읽음 (시트 목록·ID 구간·읽는 순서)
 │   ├── UnitStat.csv
 │   ├── Player.csv
@@ -47,9 +60,9 @@ Data/
 │   └── String.csv
 ```
 
-CSV 추출기는 개발팀이 만들어 관리합니다. 이 저장소에는 시트와 추출 결과(CSV)만 둡니다.
+CSV 추출기는 개발팀이 만들어 관리합니다.
 
-README·Reference·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내보내지 않습니다.
+구글 시트의 README·Reference·StatCurve·Balance 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다.
 
 ## 시트 규칙
 
@@ -79,9 +92,9 @@ README·Reference·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내�
 
 ## 데이터 고치는 순서
 
-1. 구글 시트를 고칩니다. (CSV를 직접 고치지 않습니다. 다음 내보내기 때 덮어써집니다.)
-2. 시트에서 `파일 > 다운로드 > Microsoft Excel(.xlsx)` 하고, 받은 파일로 `source/인귀_데이터테이블.xlsx`를 덮어씁니다.
-3. 개발팀 추출기로 `csv/`를 다시 만듭니다.
+1. 구글 시트를 고칩니다. (`tables/`·`csv/` 파일을 직접 고치지 않습니다. 다음에 다시 나눌 때 덮어써집니다.)
+2. 시트를 xlsx로 받아 탭별 파일로 나눠 `tables/`를 덮어씁니다(값만, 설명·계산 탭 제외). 지금은 기획 쪽에서 Claude에게 요청해 나눕니다.
+3. 개발팀 추출기로 `tables/`에서 `csv/`를 다시 만듭니다.
 4. `git diff`로 바뀐 값을 확인하고 커밋합니다. 커밋 메시지에 무엇을 왜 바꿨는지 적습니다.
    예: `Monster: 허수귀 HP 35→40 (시연 난이도 조정)`
 
