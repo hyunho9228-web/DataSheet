@@ -116,7 +116,7 @@ classDiagram
     }
 ```
 
-공통 HP·ATK·DEF·Dodge·Crit·CritMult·Poise·MoveSpeed·ArmorPen은 CharacterStat에 한 번만 선언합니다. 하위 클래스는 개별 스탯만 선언합니다. Player·Monster 생성자는 UnitStat의 공통 값을 전달받습니다. Boss·Elite는 공통 정의와 단계별 상태 목록을 받습니다. 정의 데이터는 읽기 전용 프로퍼티로 생성하고 변경 가능한 게임 중 상태와 분리합니다.
+공통 HP·ATK·DEF·Dodge·Crit·CritDamage·Poise·MoveSpeed·ArmorPen은 CharacterStat에 한 번만 선언합니다. 하위 클래스는 개별 스탯만 선언합니다. Player·Monster 생성자는 UnitStat의 공통 값을 전달받습니다. Boss·Elite는 공통 정의와 단계별 상태 목록을 받습니다. 정의 데이터는 읽기 전용 프로퍼티로 생성하고 변경 가능한 게임 중 상태와 분리합니다.
 
 클래스 파일·클래스명은 탭 이름이며 프로퍼티명은 컬럼명입니다. 생성할 때마다 전체 파일을 새로 만들어 배포하므로 컬럼 추가·삭제도 반영됩니다. State.Key와 ID로 StateKey enum도 생성합니다. 생성 코드는 직접 수정하지 않습니다.
 
@@ -130,7 +130,7 @@ Item JSON은 객체 배열이며 상태 JSON 3개는 UnitID별 `States` 배열�
 
 ## 수치와 인코딩
 
-기본 수치는 Int32 정수이고 시간은 밀리세컨드입니다. 확률은 분모 10000으로 Dodge·Crit 등 확률값은 0~10000입니다. 배율은 10000을 기준으로 하되 CritMult·DamageMult·Parallax처럼 10000을 넘는 항목은 별도 최대값이 없으면 허용합니다. 이동 관련 값은 시트의 고정 소수 단위(tile_x100 등)를 따르며 엔진 표현으로 변환하는 책임은 클라이언트 어댑터에 둡니다.
+기본 수치는 Int32 정수이고 시간은 밀리세컨드입니다. 확률은 분모 10000으로 Dodge·Crit 등 확률값은 0~10000입니다. 데미지는 배율 없이 정수 더하기만 씁니다(CritDamage·Skill.Damage는 추가 데미지, 10/29). 배율은 10000을 기준으로 하되 Parallax처럼 10000을 넘는 항목은 별도 최대값이 없으면 허용합니다. 이동 관련 값은 시트의 고정 소수 단위(tile_x100 등)를 따르며 엔진 표현으로 변환하는 책임은 클라이언트 어댑터에 둡니다.
 
 원본 Flag는 Y/N이며 CSV는 Y/N, JSON과 C#은 bool입니다. 모든 텍스트 데이터와 생성 코드는 UTF-8입니다. CSV는 BOM 없이 LF를 사용합니다. 주석과 설명은 한국어로 작성합니다.
 
