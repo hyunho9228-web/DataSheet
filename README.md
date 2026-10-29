@@ -43,7 +43,7 @@ Data/
 │   ├── Stage.xlsx
 │   ├── StageLayer.xlsx
 │   ├── State.xlsx        ← 애니메이션 상태 Key 목록. Key는 프로젝트 Enum 관리형 데이터로만 씀(자동 배포). Common·Player·Monster·Boss·Required는 안 씀(비고 열)
-│   └── Language.xlsx      ← 표시 텍스트 ID (예전 String). KO(한글 문구)는 비고 열이라 추출 안 함, 한국어 표시는 개발에서 하드코딩
+│   └── Language.xlsx      ← 표시 텍스트 (예전 String). 언어별 문구 KO·EN 열을 추출함(KO 한글은 이 시트만 예외)
 ├── stats/
 │   └── item/<ID>.json    ← 아이템 스탯 JSON (Item 시트 StatJson 열이 가리킴)
 └── (추출 결과 CSV·JSON)   ← 개발팀 추출기가 정함 (예전 csv/ 추출본은 열이 바뀌어 지움)
@@ -62,7 +62,7 @@ Data/
 | 행 구성 | 1~5행 규칙·기능·역할·의도·비고(추출에서 빠짐), 6행 열 이름, 7행부터 데이터 |
 | 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(UnitStat, Player, Monster, Buff, Skill, Stage, StageLayer, State, Language) |
 | 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **추출에서 뺌**. ID 열은 비고에 넣을 수 없음 |
-| 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
+| 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만. **예외: Language 시트 KO 열**(언어 출력용 문구라 추출, 개발팀 확인 10/29) |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
 | ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 구글 시트 README 탭의 ID 구간 표 |
 | 목록 값 | 세로줄(`\|`)로 구분 (예: `5013\|5014\|5015`) |
@@ -78,7 +78,7 @@ Data/
 
 ## 출력 형식 (CSV·JSON)
 
-형식은 시트 2행 기능 앞(`CSV,` / `JSON,`)이 정합니다. 둘 다 **한글 금지**입니다. 인코딩 문제를 막으려고 내보내는 값에는 영어·숫자·기호만 둡니다(SILENT와 같은 규칙). 한글은 5행 비고에 적은 열(Name·Note 등)에만 씁니다.
+형식은 시트 2행 기능 앞(`CSV,` / `JSON,`)이 정합니다. 둘 다 **한글 금지**입니다(예외: Language KO 열). 인코딩 문제를 막으려고 내보내는 값에는 영어·숫자·기호만 둡니다(SILENT와 같은 규칙). 한글은 5행 비고에 적은 열(Name·Note 등)에만 씁니다.
 
 CSV
 - UTF-8(BOM 없음), 줄바꿈 LF, 쉼표 구분
@@ -101,7 +101,7 @@ JSON (UnitState 세 시트, Item)
 
 - 위 시트 규칙대로 추출: 6행 열 이름, 7행부터 A열이 빈 첫 행까지, 5행 비고에 적힌 열 제외
 - README·Reference·StatCurve·Balance·Formula 탭 제외
-- 다음 중 하나라도 있으면 그 탭은 추출하지 않고 위치를 알려 줌: A열 ID 중복, 비고에 적힌 열이 6행에 없음, 추출할 칸이나 열 이름에 한글
+- 다음 중 하나라도 있으면 그 탭은 추출하지 않고 위치를 알려 줌: A열 ID 중복, 비고에 적힌 열이 6행에 없음, 추출할 칸이나 열 이름에 한글(Language KO 열 제외)
 
 ## 아이템 스탯 JSON
 
@@ -141,6 +141,7 @@ Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stat
 - REGISTRY 시트 삭제(사용 안 함). 11001~ 번호는 다시 쓰지 않음
 - StageLayer LayerName 한글 → 영어 enum(SKY, FAR, MID, PLAY, FRONT, BACK, ImageKey 끝과 같음)
 - Language KO 열(한글 표시 문구)도 비고 열로 옮겨 추출에서 뺌 → 추출 데이터에 한글 없음
+- (위를 되돌림) 개발팀 답: KO는 언어 출력용이라 추출해도 문제없음 → Language KO 열 다시 추출. EN 열 채움: 인물·요괴·보스·무기·지명 같은 고유명사는 로마자(국어의 로마자 표기법, 막손 Makson, 쇄문아비 Swaemunabi, 버선칼 Beoseonkal, 도화골 Dohwagol), 수식어는 번역(불붙은 허수귀 Burning Heosugwi), 스킬·UI 문구는 영어 번역(결박 가르기 Bind Cleave)
 - 방어를 비율 → 고정 수치로. 데미지 = `max(1, INT((ATK + 아이템 ATK) × 배율 ÷ 10000) − max(0, DEF − ArmorPen))` → 치명타 배율. UnitStat에 `ArmorPen` 열 추가(전원 0), statType enum에도 추가. DEF 값 다시 잡음: 몬스터 0·2·4, 보스 4. 계산식은 구글 시트 Formula 탭(내보내지 않음)
 - Player 약초 열(HerbHeal·HerbCount·HerbUseTime)을 `Buff.xlsx`(14001~, 14001 약초 회복)로 분리. Player 열 순서 = 1~3열 공통(ID, Name, UnitID) 뒤에 플레이어 전용, StartWeapon은 Note 앞
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
