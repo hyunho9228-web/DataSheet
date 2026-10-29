@@ -43,7 +43,7 @@ Data/
 │   ├── Stage.xlsx
 │   ├── StageLayer.xlsx
 │   ├── State.xlsx        ← 애니메이션 상태 Key 목록. Key는 프로젝트 Enum 관리형 데이터로만 씀(자동 배포). Common·Player·Monster·Boss·Required는 안 씀(비고 열)
-│   └── String.xlsx
+│   └── Language.xlsx      ← 표시 텍스트 (예전 String, 코드의 string 타입과 꼬여서 이름 변경)
 ├── stats/
 │   └── item/<ID>.json    ← 아이템 스탯 JSON (Item 시트 StatJson 열이 가리킴)
 └── (추출 결과 CSV·JSON)   ← 개발팀 추출기가 정함 (예전 csv/ 추출본은 열이 바뀌어 지움)
@@ -60,7 +60,7 @@ Data/
 | 항목 | 규칙 |
 |---|---|
 | 행 구성 | 1~5행 규칙·기능·역할·의도·비고(추출에서 빠짐), 6행 열 이름, 7행부터 데이터 |
-| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(REGISTRY, UnitStat, Player, Monster, Skill, Stage, StageLayer, State, String) |
+| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(REGISTRY, UnitStat, Player, Monster, Skill, Stage, StageLayer, State, Language) |
 | 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **추출에서 뺌**. ID 열은 비고에 넣을 수 없음 |
 | 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
@@ -72,7 +72,7 @@ Data/
 | 비율·확률 | 만분율 (10000 = 100%) |
 | 시간 | ms |
 | 거리·속도 | 타일 × 100 |
-| 표시 텍스트 | 직접 쓰지 않고 String 키로 참조 |
+| 표시 텍스트 | 직접 쓰지 않고 Language 시트의 TextID로 참조 |
 | 공통 열 | 같은 뜻의 값은 시트가 달라도 같은 열 이름·같은 순서. 스탯은 모든 유닛이 UnitStat 한 줄(HP, ATK, DEF, Dodge, Crit, CritMult, Poise, MoveSpeed). 몬스터 행동은 Monster·BossState·EliteState가 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor`를 같은 순서로 가짐 |
 
 ## 출력 형식 (CSV·JSON)
@@ -136,6 +136,7 @@ Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stat
 - 아이템을 Item 한 시트로 합침, ItemType enum, StatJson → `stats/item/<ID>.json`
 - 각 시트 2행 기능 앞에 출력 형식 `CSV,` / `JSON,` 표시
 - State 시트: Key만 프로젝트 Enum 관리형 데이터로 씀(등록→자동 배포). Common·Player·Monster·Boss·Required 열은 안 쓰고 5행 비고에 넣어 추출에서 뺌. 상태 동작은 코드로 구현하고, 특수 상태만 나중에 따로 JSON. UnitState(유닛별 상태 값 JSON)와는 별개
+- String 시트·파일 이름을 Language로 변경(코드의 string 타입과 꼬임). ID 구간 30001~ 그대로
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
 - Item StatJson 값은 경로 대신 파일 이름만(`6002.json`, 개발팀 f44287f)
 - Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
