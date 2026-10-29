@@ -37,7 +37,7 @@ Data/
 │   ├── UnitStat.xlsx
 │   ├── Player.xlsx
 │   ├── Monster.xlsx
-│   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (상태 단계·상태이상, 초안)
+│   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (구조 초안, 안의 상태·값은 예시·미확정)
 │   ├── Attack.xlsx
 │   ├── Weapon.xlsx
 │   ├── Skill.xlsx
