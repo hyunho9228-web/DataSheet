@@ -42,7 +42,7 @@ Data/
 │   ├── Stage.xlsx
 │   ├── StageLayer.xlsx
 │   ├── State.xlsx        ← 애니메이션 상태 Key 목록. Key는 프로젝트 Enum 관리형 데이터로만 씀(자동 배포). Common·Player·Monster·Boss·Required는 안 씀(비고 열)
-│   └── Language.xlsx      ← 표시 텍스트 (예전 String, 코드의 string 타입과 꼬여서 이름 변경)
+│   └── Language.xlsx      ← 표시 텍스트 ID (예전 String). KO(한글 문구)는 비고 열이라 추출 안 함, 한국어 표시는 개발에서 하드코딩
 ├── stats/
 │   └── item/<ID>.json    ← 아이템 스탯 JSON (Item 시트 StatJson 열이 가리킴)
 └── (추출 결과 CSV·JSON)   ← 개발팀 추출기가 정함 (예전 csv/ 추출본은 열이 바뀌어 지움)
@@ -138,6 +138,7 @@ Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stat
 - String 시트·파일 이름을 Language로 변경(코드의 string 타입과 꼬임). ID 구간 30001~ 그대로
 - REGISTRY 시트 삭제(사용 안 함). 11001~ 번호는 다시 쓰지 않음
 - StageLayer LayerName 한글 → 영어 enum(SKY, FAR, MID, PLAY, FRONT, BACK, ImageKey 끝과 같음)
+- Language KO 열(한글 표시 문구)도 비고 열로 옮겨 추출에서 뺌 → 추출 데이터에 한글 없음
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
 - Item StatJson 값은 경로 대신 파일 이름만(`6002.json`, 개발팀 f44287f)
 - Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
