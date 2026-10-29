@@ -3,7 +3,7 @@
 인귀(Unity 프로젝트) 데이터 테이블 전용 저장소입니다.
 데이터를 고친 커밋이 게임 프로젝트 저장소(`lkhwcf-arch/Human_Ghost-`)에 섞이지 않도록 따로 둡니다.
 
-- 원본: [데이터 테이블 구글 시트](https://docs.google.com/spreadsheets/d/1Xn7PQsVVOY2dE_aiTLcrFxN08fgGxDH5hpaEGJBBbG8/edit)
+- 원본: [Ingwi_DataTable 구글 시트](https://docs.google.com/spreadsheets/d/1Xn7PQsVVOY2dE_aiTLcrFxN08fgGxDH5hpaEGJBBbG8/edit)
 - 기획은 구글 시트 하나에서 고칩니다(탭끼리 수식·밸런스 계산이 이어져 있어서).
 - 저장소에는 그 시트를 **테이블별 xlsx 파일**(`tables/`)로 나눠 올립니다. 값만 들어 있고 수식은 없습니다.
 - `csv/`는 그 파일들을 개발팀 추출기로 뽑은 결과입니다.
