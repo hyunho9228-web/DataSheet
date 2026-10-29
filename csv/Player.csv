@@ -1,0 +1,2 @@
+ID,Name,UnitID,StaminaMax,StaminaRegen,StaminaRegenDelay,RollDistance,RollTime,RollIFrame,RollStamina,JumpHeight,HitStunTime,HitIFrame,HerbHeal,HerbCount,HerbUseTime,HangAuto,StartWeapon,CritHitStunTime,LandFallHeight,LandTime,InputBuffer,Active,Note
+2001,막손 기본,1001,100,45,500,300,500,300,20,300,300,600,40,3,800,Y,6001,500,500,200,150,Y,"CritHitStunTime=치명타 피격 경직, LandFallHeight=착지 모션이 나오는 낙하 높이(5타일), InputBuffer=선입력 버퍼"

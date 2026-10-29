@@ -1,0 +1,5 @@
+ID,Name,TextID,Order,NextStage,BGM_Normal,BGM_Battle,SpawnFile,Active,Note
+8001,마을(도화골),30011,1,8002,BGM_VILLAGE,BGM_BATTLE,spawn/8001.json,Y,"인트로 컷씬 뒤, 부상당한 피난민 NPC"
+8002,사냥터 1,30012,2,8003,BGM_FIELD,BGM_BATTLE,spawn/8002.json,Y,
+8003,사냥터 2,30013,3,8004,BGM_FIELD,BGM_BATTLE,spawn/8003.json,Y,장부방(결박 가르기 해금)
+8004,보스방,30014,4,,,BGM_BOSS,spawn/8004.json,Y,전투 BGM BPM 낮춤 버전(10/28)

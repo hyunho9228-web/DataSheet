@@ -1,0 +1,13 @@
+ID,Name,Sheet,Parent,ParentKey,Uses,IDRange,LoadOrder,Required,Active
+11001,모듈 목록,REGISTRY,-,-,-,11001~,0,Y,Y
+11002,표시 텍스트,String,-,-,-,30001~,1,Y,Y
+11003,상태,State,-,-,-,10001~,1,Y,Y
+11004,유닛 스탯,UnitStat,-,-,String,1001~,2,Y,Y
+11005,공격,Attack,UnitStat,OwnerID,"State, String",5001~,3,Y,Y
+11006,스킬,Skill,Weapon,WeaponID,"Attack, String",7001~,4,Y,Y
+11007,무기,Weapon,-,-,"Attack, Skill, String",6001~,4,Y,Y
+11008,플레이어,Player,UnitStat,UnitID,Weapon,2001~,5,Y,Y
+11009,몬스터,Monster,UnitStat,UnitID,Attack,3001~,5,Y,Y
+11010,보스 페이즈,Boss,UnitStat,UnitID,Attack,4001~,5,Y,Y
+11011,스테이지,Stage,-,-,"String, Monster(스폰 JSON)",8001~,6,Y,Y
+11012,배경 레이어,StageLayer,Stage,StageID,-,9001~,7,Y,Y

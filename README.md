@@ -4,7 +4,8 @@
 데이터를 고친 커밋이 게임 프로젝트 저장소(`lkhwcf-arch/Human_Ghost-`)에 섞이지 않도록 따로 둡니다.
 
 - 원본: [데이터 테이블 구글 시트](https://docs.google.com/spreadsheets/d/1Xn7PQsVVOY2dE_aiTLcrFxN08fgGxDH5hpaEGJBBbG8/edit)
-- 이 저장소에는 시트를 탭별로 내보낸 **CSV만** 넣습니다. xlsx 같은 바이너리는 넣지 않습니다.
+- 게임이 읽는 것은 `csv/`의 탭별 CSV입니다.
+- `source/인귀_데이터테이블.xlsx`는 시트를 통째로 받은 스냅샷입니다. CSV와 같은 시점의 시트 전체(수식·설명 탭 포함)를 남기려고 같이 커밋합니다. xlsx는 바이너리라 diff가 안 보이니 변경 확인은 CSV로 합니다.
 
 ## 로컬 폴더 구성
 
@@ -29,7 +30,10 @@ git clone https://github.com/hyunho9228-web/DataSheet.git Data
 ```
 Data/
 ├── README.md
+├── source/
+│   └── 인귀_데이터테이블.xlsx ← 시트 전체 스냅샷 (CSV와 같은 시점)
 ├── csv/                  ← 게임이 읽는 테이블 (탭 1개 = 파일 1개)
+│   ├── REGISTRY.csv      ← 로더가 맨 먼저 읽음 (시트 목록·ID 구간·읽는 순서)
 │   ├── UnitStat.csv
 │   ├── Player.csv
 │   ├── Monster.csv
@@ -45,14 +49,18 @@ Data/
     └── export_csv.py     ← xlsx → CSV 변환 + ID 검사
 ```
 
-README·Reference·REGISTRY·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내보내지 않습니다.
+README·Reference·StatCurve·Balance 탭은 설명·계산용이라 CSV로 내보내지 않습니다.
 
 ## 시트 규칙
 
 | 항목 | 규칙 |
 |---|---|
-| 행 구성 | 1~5행 설명(CSV에서 빠짐), 6행 열 이름, 7행부터 데이터 |
-| ID | 각 탭 A열. **중복 금지**, 빈 칸 금지. 체계는 시트 README 탭 기준 |
+| 행 구성 | 1~5행 규칙·기능·역할·의도·비고(CSV에서 빠짐), 6행 열 이름, 7행부터 데이터 |
+| 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
+| ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 REGISTRY의 IDRange |
+| 목록 값 | 세로줄(`\|`)로 구분 (예: `5013\|5014\|5015`) |
+| 플래그 | `Y` / `N` |
+| Active | `N`인 행도 CSV에는 남기고, 로더가 건너뜀 |
 | 자료형 | 모두 정수 |
 | 비율·확률 | 만분율 (10000 = 100%) |
 | 시간 | ms |
@@ -68,13 +76,13 @@ README·Reference·REGISTRY·StatCurve·Balance 탭은 설명·계산용이라 C
 ## 데이터 고치는 순서
 
 1. 구글 시트를 고칩니다. (CSV를 직접 고치지 않습니다. 다음 내보내기 때 덮어써집니다.)
-2. 시트에서 `파일 > 다운로드 > Microsoft Excel(.xlsx)`
+2. 시트에서 `파일 > 다운로드 > Microsoft Excel(.xlsx)` 하고, 받은 파일로 `source/인귀_데이터테이블.xlsx`를 덮어씁니다.
 3. 내보내기
    ```bash
    pip install openpyxl
-   python tools/export_csv.py ~/Downloads/인귀_데이터테이블.xlsx
+   python tools/export_csv.py source/인귀_데이터테이블.xlsx
    ```
-   ID가 비었거나 겹치면 해당 탭은 내보내지 않고 오류를 보여줍니다.
+   ID가 겹치면 해당 탭은 내보내지 않고 오류를 보여줍니다.
 4. `git diff`로 바뀐 값을 확인하고 커밋합니다. 커밋 메시지에 무엇을 왜 바꿨는지 적습니다.
    예: `Monster: 허수귀 HP 35→40 (시연 난이도 조정)`
 

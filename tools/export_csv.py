@@ -3,10 +3,12 @@
 사용법:
     1) 구글 시트 > 파일 > 다운로드 > Microsoft Excel(.xlsx)
     2) python tools/export_csv.py 받은파일.xlsx
-       -> csv/<탭이름>.csv 로 덮어씀. xlsx는 저장소에 넣지 않는다(.gitignore).
+       -> csv/<탭이름>.csv 로 덮어씀.
+       받은 xlsx는 source/인귀_데이터테이블.xlsx 로 덮어써서 같이 커밋한다(스냅샷).
 
-시트 규칙(README 참고): 1~5행은 설명, 6행 = 열 이름, 7행부터 데이터.
-내보내면서 검사하는 것: A열 ID 중복, 빈 ID, 빈 열 이름.
+시트 규칙(README 참고): 1~5행은 설명(규칙·기능·역할·의도·비고), 6행 = 열 이름,
+7행부터 데이터. A열이 빈 첫 행에서 읽기를 멈춤(그 아래 계산·JSON 예시는 데이터가 아님).
+내보내면서 검사하는 것: A열 ID 중복, 빈 열 이름.
 """
 import csv
 import sys
@@ -16,7 +18,7 @@ from openpyxl import load_workbook
 
 HEADER_ROW = 6
 # 설명·계산용 탭은 내보내지 않음
-SKIP_SHEETS = {"README", "Reference", "REGISTRY", "StatCurve", "Balance"}
+SKIP_SHEETS = {"README", "Reference", "StatCurve", "Balance"}
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "csv"
 
@@ -45,12 +47,10 @@ def export_sheet(ws):
     for i, r in enumerate(rows[1:], start=HEADER_ROW + 1):
         vals = [cell_text(v) for v in r[:width]]
         vals += [""] * (width - len(vals))
-        if not any(vals):
-            continue
         rid = vals[0]
         if rid == "":
-            errors.append(f"{i}행: ID(A열)가 비어 있음")
-        elif rid in seen:
+            break
+        if rid in seen:
             errors.append(f"{i}행: ID {rid} 중복 ({seen[rid]}행과 같음)")
         else:
             seen[rid] = i
