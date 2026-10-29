@@ -39,29 +39,18 @@ Data/
 │   ├── Monster.xlsx
 │   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (구조 초안, 안의 상태·값은 예시·미확정)
 │   ├── Attack.xlsx
-│   ├── Weapon.xlsx
+│   ├── Item.xlsx         ← 시트 3개: Weapon·Armor·Consumable (Armor·Consumable은 열 구조만, 초안)
 │   ├── Skill.xlsx
 │   ├── Stage.xlsx
 │   ├── StageLayer.xlsx
 │   ├── State.xlsx
 │   └── String.xlsx
-├── csv/                  ← 추출 결과 (xlsx 1개 = CSV 1개)
-│   ├── REGISTRY.csv      ← 로더가 맨 먼저 읽음 (시트 목록·ID 구간·읽는 순서)
-│   ├── UnitStat.csv
-│   ├── Player.csv
-│   ├── Monster.csv
-│   ├── Attack.csv
-│   ├── Weapon.csv
-│   ├── Skill.csv
-│   ├── Stage.csv
-│   ├── StageLayer.csv
-│   ├── State.csv
-│   └── String.csv
+└── csv/                  ← 개발팀 추출기 결과 자리 (아직 없음, 예전 추출본은 열이 바뀌어 지움)
 ```
 
 CSV 추출기는 개발팀이 만들어 관리합니다.
 
-대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
+대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx`, 아이템(무기·방어구·소모품)은 `Item.xlsx` 한 파일에 시트로 나눠 넣습니다. 시트 이름(Weapon·Armor·Consumable 등)과 분류 값은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
 
 구글 시트의 README·Reference·StatCurve·Balance 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다.
 
@@ -76,7 +65,7 @@ CSV 추출기는 개발팀이 만들어 관리합니다.
 | ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 REGISTRY의 IDRange |
 | 목록 값 | 세로줄(`\|`)로 구분 (예: `5013\|5014\|5015`) |
 | 플래그 | `Y` / `N` |
-| Active | `N`인 행도 CSV에는 남기고, 로더가 건너뜀 |
+| Active | 켜고 끄는 데이터에만 둠: REGISTRY(시트 단위), Stage(스테이지 단위). `N`이면 로더가 건너뜀. 상시 쓰는 나머지 시트에는 Active 열 없음 |
 | 자료형 | 모두 정수 |
 | 비율·확률 | 만분율 (10000 = 100%) |
 | 시간 | ms |
