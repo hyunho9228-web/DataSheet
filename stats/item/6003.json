@@ -1,0 +1,10 @@
+[
+  {
+    "statType": "ATK",
+    "value": 6
+  },
+  {
+    "statType": "MoveSpeed",
+    "value": -50
+  }
+]

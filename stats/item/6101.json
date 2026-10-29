@@ -1,0 +1,10 @@
+[
+  {
+    "statType": "Dodge",
+    "value": 200
+  },
+  {
+    "statType": "MoveSpeed",
+    "value": 50
+  }
+]

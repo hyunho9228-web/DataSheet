@@ -39,18 +39,20 @@ Data/
 │   ├── Monster.xlsx
 │   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (구조 초안, 안의 상태·값은 예시·미확정)
 │   ├── Attack.xlsx
-│   ├── Item.xlsx         ← 시트 3개: Weapon·Armor·Consumable (Armor·Consumable은 열 구조만, 초안)
+│   ├── Item.xlsx         ← 아이템 한 시트 (무기·방어구·소모품, ItemType으로 구분)
 │   ├── Skill.xlsx
 │   ├── Stage.xlsx
 │   ├── StageLayer.xlsx
 │   ├── State.xlsx
 │   └── String.xlsx
+├── stats/
+│   └── item/<ID>.json    ← 아이템 스탯 JSON (Item 시트 StatJson 열이 가리킴)
 └── csv/                  ← 개발팀 추출기 결과 자리 (아직 없음, 예전 추출본은 열이 바뀌어 지움)
 ```
 
 CSV 추출기는 개발팀이 만들어 관리합니다.
 
-대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx`, 아이템(무기·방어구·소모품)은 `Item.xlsx` 한 파일에 시트로 나눠 넣습니다. 시트 이름(Weapon·Armor·Consumable 등)과 분류 값은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
+대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 아이템(무기·방어구·소모품)은 `Item` 시트 하나에 모으고 `ItemType`으로 구분합니다. 분류 값(ItemType 등)은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
 
 구글 시트의 README·Reference·StatCurve·Balance 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다.
 
@@ -93,6 +95,27 @@ CSV 추출기는 개발팀이 만들어 관리합니다.
 - 위 시트 규칙대로 추출: 6행 열 이름, 7행부터 A열이 빈 첫 행까지, 5행 비고에 적힌 열 제외
 - README·Reference·StatCurve·Balance 탭 제외
 - 다음 중 하나라도 있으면 그 탭은 추출하지 않고 위치를 알려 줌: A열 ID 중복, 비고에 적힌 열이 6행에 없음, 추출할 칸이나 열 이름에 한글
+
+## 아이템 스탯 JSON
+
+Item 시트의 `StatJson` 열에 파일 경로(저장소 기준)를 적고, 파일에는 그 아이템이 더해 주는 스탯을 배열로 넣습니다. 아이템마다 스탯 개수와 종류가 달라도 됩니다.
+
+```json
+[
+  { "statType": "ATK", "value": 2 },
+  { "statType": "Crit", "value": 200 }
+]
+```
+
+| 키 | 값 |
+|---|---|
+| `statType` | enum. UnitStat 열 이름과 같음: `HP`, `ATK`, `DEF`, `Dodge`, `Crit`, `CritMult`, `Poise`, `MoveSpeed` |
+| `value` | 정수. 시트 단위 규칙 그대로(비율·확률은 만분율, 200 = 2%). 음수면 감소 |
+
+- 스탯이 없으면 빈 배열 `[]` (예: 발골칼 6001, 기본 스탯은 UnitStat에 있음)
+- 파일 이름은 아이템 ID: `stats/item/6002.json`. 한글 금지
+- 지금 들어 있는 값(버선칼·쇠메·버선·약초)은 형식을 보여 주는 예시이며 미확정입니다
+- statType을 늘릴 때는 이 표와 구글 시트 README 탭 "정해진 단어"를 같이 고칩니다
 
 ## Unity 연동 (제안, 메인 개발과 확정 필요)
 
