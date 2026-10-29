@@ -32,8 +32,7 @@ git clone https://github.com/hyunho9228-web/DataSheet.git Data
 ```
 Data/
 ├── README.md
-├── tables/               ← 테이블별 xlsx (파일 이름 = REGISTRY의 File 값)
-│   ├── REGISTRY.xlsx     ← 로더가 맨 먼저 읽음 (시트 목록·ID 구간·읽는 순서)
+├── tables/               ← 테이블별 xlsx (파일 이름 = 시트 이름, 상태 3시트만 UnitState로 묶음)
 │   ├── UnitStat.xlsx
 │   ├── Player.xlsx
 │   ├── Monster.xlsx
@@ -51,7 +50,7 @@ Data/
 
 추출기(xlsx → CSV·JSON)는 개발팀이 만들어 관리합니다.
 
-대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 아이템(무기·방어구·소모품)은 `Item` 시트 하나에 모으고 `ItemType`으로 구분합니다. 무기는 지금 2종입니다: 버선칼 6002(시작 무기), 쇠메 6003(완성판). 발골칼은 해체 연출에만 쓰여 아이템이 아니라서 뺐고, 6001 번호는 다시 쓰지 않습니다. 분류 값(ItemType 등)은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
+대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 아이템(무기·방어구·소모품)은 `Item` 시트 하나에 모으고 `ItemType`으로 구분합니다. 무기는 지금 2종입니다: 버선칼 6002(시작 무기), 쇠메 6003(완성판). 발골칼은 해체 연출에만 쓰여 아이템이 아니라서 뺐고, 6001 번호는 다시 쓰지 않습니다. 분류 값(ItemType 등)은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다.
 
 구글 시트의 README·Reference·StatCurve·Balance 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다.
 
@@ -60,14 +59,14 @@ Data/
 | 항목 | 규칙 |
 |---|---|
 | 행 구성 | 1~5행 규칙·기능·역할·의도·비고(추출에서 빠짐), 6행 열 이름, 7행부터 데이터 |
-| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(REGISTRY, UnitStat, Player, Monster, Skill, Stage, StageLayer, State, Language) |
+| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(UnitStat, Player, Monster, Skill, Stage, StageLayer, State, Language) |
 | 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **추출에서 뺌**. ID 열은 비고에 넣을 수 없음 |
 | 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
-| ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 REGISTRY의 IDRange |
+| ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 구글 시트 README 탭의 ID 구간 표 |
 | 목록 값 | 세로줄(`\|`)로 구분 (예: `5013\|5014\|5015`) |
 | 플래그 | `Y` / `N` |
-| Active | 켜고 끄는 데이터에만 둠: REGISTRY(시트 단위), Stage(스테이지 단위). `N`이면 로더가 건너뜀. 상시 쓰는 나머지 시트에는 Active 열 없음 |
+| Active | 켜고 끄는 데이터에만 둠: Stage(스테이지 단위). `N`이면 로더가 건너뜀. 상시 쓰는 나머지 시트에는 Active 열 없음 |
 | 자료형 | 모두 정수 |
 | 비율·확률 | 만분율 (10000 = 100%) |
 | 시간 | ms |
@@ -127,16 +126,17 @@ Item 시트의 `StatJson` 열에 파일 이름(예: `6002.json`, 파일은 `stat
 ## 변경 기록
 
 **10/29**
-- SILENT식 숫자 ID로 개편, 탭별 ID 구간, REGISTRY 시트 추가 (지운 번호는 다시 쓰지 않음)
+- SILENT식 숫자 ID로 개편, 탭별 ID 구간 (지운 번호는 다시 쓰지 않음)
 - 구글 시트 제목 `Ingwi_DataTable`. 파일·폴더·탭 이름과 내보내는 값에 한글 금지
 - 저장소를 테이블별 xlsx(`tables/`)로 나눔. 추출기는 개발팀 담당. main에 바로 올림
 - State 분류 변경(Common 9개, Stun·Skill2·Skill3·Bound·PhaseChange 추가)
 - 상태 시트 PlayerState·EliteState·BossState 추가 → `UnitState.xlsx` (구조 예시·미확정). UnitStat Type에 Elite
-- Active 열은 REGISTRY·Stage에만 남김
+- Active 열은 Stage에만 남김
 - 아이템을 Item 한 시트로 합침, ItemType enum, StatJson → `stats/item/<ID>.json`
 - 각 시트 2행 기능 앞에 출력 형식 `CSV,` / `JSON,` 표시
 - State 시트: Key만 프로젝트 Enum 관리형 데이터로 씀(등록→자동 배포). Common·Player·Monster·Boss·Required 열은 안 쓰고 5행 비고에 넣어 추출에서 뺌. 상태 동작은 코드로 구현하고, 특수 상태만 나중에 따로 JSON. UnitState(유닛별 상태 값 JSON)와는 별개
 - String 시트·파일 이름을 Language로 변경(코드의 string 타입과 꼬임). ID 구간 30001~ 그대로
+- REGISTRY 시트 삭제(사용 안 함). 11001~ 번호는 다시 쓰지 않음
 - 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
 - Item StatJson 값은 경로 대신 파일 이름만(`6002.json`, 개발팀 f44287f)
 - Attack 테이블 삭제(평타 타수까지 데이터로 두면 기획이 너무 무거워진다는 피드백). Item AttackIDs, Monster·BossState·EliteState AttackIDs 열 삭제, 스킬 공격 값(배율·체세 피해·StateID)은 Skill로 옮김
