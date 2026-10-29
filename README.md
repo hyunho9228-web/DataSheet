@@ -72,7 +72,7 @@ Data/
 | 시간 | ms |
 | 거리·속도 | 타일 × 100 |
 | 표시 텍스트 | 직접 쓰지 않고 Language 시트의 TextID로 참조 |
-| 공통 열 | 같은 뜻의 값은 시트가 달라도 같은 열 이름·같은 순서. 스탯은 모든 유닛이 UnitStat 한 줄(HP, ATK, DEF, Dodge, Crit, CritMult, Poise, MoveSpeed). 몬스터 행동은 Monster·BossState·EliteState가 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor`를 같은 순서로 가짐 |
+| 공통 열 | 같은 뜻의 값은 시트가 달라도 같은 열 이름·같은 순서. 스탯은 모든 유닛이 UnitStat 한 줄(HP, ATK, DEF, Dodge, Crit, CritMult, Poise, MoveSpeed). 모든 유닛 시트는 1~3열 `ID, Name, UnitID`. Monster·BossState·EliteState는 4~11열이 `IdleMin, IdleMax, PoiseRegenDelay, PoiseRegen, ExposeTime, ExecuteType, ExecuteDamage, SuperArmor`(같은 열 번호), 시트 고유 열은 그 뒤, Note는 맨 끝 |
 
 ## 출력 형식 (CSV·JSON)
 
