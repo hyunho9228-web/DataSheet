@@ -1,19 +1,19 @@
-ID,Name,Key,Common,Player,Monster,Boss,Required,Active,Note
-10001,아이들,Idle,Y,Y,Y,Y,Y,Y,
-10002,워크,Walk,Y,Y,Y,Y,Y,Y,
-10003,히트,Hit,Y,Y,Y,Y,Y,Y,플레이어 300ms 후 무적 600ms. 슈퍼아머 중엔 생략
-10004,어택1,Attack1,Y,Y,Y,Y,Y,Y,
-10005,어택2,Attack2,Y,Y,Y,Y,Y,Y,보스 어택 2-1 수정 예정
-10006,어택3,Attack3,Y,Y,N,Y,Y,Y,
-10007,회피,Evade,Y,Y,Y,Y,Y,Y,회피 확률 발동 시 모션. 구르기와 별개
-10008,크리티컬 히트,CritHit,Y,Y,Y,Y,Y,Y,
-10009,스킬1,Skill1,Y,Y,Y,Y,Y,Y,플레이어 = 결박 가르기
-10010,매달리기,Hang,Y,Y,N,N,Y,Y,10/28 필수. 자동 잡기
-10011,착지,Land,Y,Y,N,N,N,Y,선택. 5타일 이상 낙하 시 200ms
-10012,구르기,Roll,N,Y,N,N,Y,Y,조작 회피. 무적 300ms
-10013,점프/낙하,Jump,N,Y,N,N,Y,Y,
-10014,급소 노출,Exposed,N,N,Y,Y,Y,Y,체세 0
-10015,해체,Execute,N,Y,Y,Y,Y,Y,"플레이어는 실행, 대상은 당함"
-10016,사망,Dead,N,Y,Y,Y,Y,Y,
-10017,약초 사용,Heal,N,Y,N,N,Y,Y,800ms
-10018,무기 획득,Acquire,N,Y,N,N,N,Y,무기별 획득 모션(완성판 위주)
+ID,Key,Common,Player,Monster,Boss,Required,Active
+10001,Idle,Y,Y,Y,Y,Y,Y
+10002,Walk,Y,Y,Y,Y,Y,Y
+10003,Hit,Y,Y,Y,Y,Y,Y
+10004,Attack1,Y,Y,Y,Y,Y,Y
+10005,Attack2,Y,Y,Y,Y,Y,Y
+10006,Attack3,Y,Y,N,Y,Y,Y
+10007,Evade,Y,Y,Y,Y,Y,Y
+10008,CritHit,Y,Y,Y,Y,Y,Y
+10009,Skill1,Y,Y,Y,Y,Y,Y
+10010,Hang,Y,Y,N,N,Y,Y
+10011,Land,Y,Y,N,N,N,Y
+10012,Roll,N,Y,N,N,Y,Y
+10013,Jump,N,Y,N,N,Y,Y
+10014,Exposed,N,N,Y,Y,Y,Y
+10015,Execute,N,Y,Y,Y,Y,Y
+10016,Dead,N,Y,Y,Y,Y,Y
+10017,Heal,N,Y,N,N,Y,Y
+10018,Acquire,N,Y,N,N,N,Y
