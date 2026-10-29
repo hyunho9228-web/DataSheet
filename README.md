@@ -32,12 +32,12 @@ git clone https://github.com/hyunho9228-web/DataSheet.git Data
 ```
 Data/
 ├── README.md
-├── tables/               ← 테이블별 xlsx (파일 이름 = REGISTRY의 Sheet 값)
+├── tables/               ← 테이블별 xlsx (파일 이름 = REGISTRY의 File 값)
 │   ├── REGISTRY.xlsx     ← 로더가 맨 먼저 읽음 (시트 목록·ID 구간·읽는 순서)
 │   ├── UnitStat.xlsx
 │   ├── Player.xlsx
 │   ├── Monster.xlsx
-│   ├── Boss.xlsx
+│   ├── UnitState.xlsx    ← 시트 3개: PlayerState·EliteState·BossState (상태 단계·상태이상, 초안)
 │   ├── Attack.xlsx
 │   ├── Weapon.xlsx
 │   ├── Skill.xlsx
@@ -50,7 +50,6 @@ Data/
 │   ├── UnitStat.csv
 │   ├── Player.csv
 │   ├── Monster.csv
-│   ├── Boss.csv
 │   ├── Attack.csv
 │   ├── Weapon.csv
 │   ├── Skill.csv
@@ -61,6 +60,8 @@ Data/
 ```
 
 CSV 추출기는 개발팀이 만들어 관리합니다.
+
+대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
 
 구글 시트의 README·Reference·StatCurve·Balance 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다.
 

@@ -1,3 +1,0 @@
-ID,UnitID,Phase,HPThreshold,AttackIDs,IdleTime,PoiseRegenDelay,PoiseRegen,ExposeTime,ExecuteDamage,Active
-4001,1006,1,10000,5013|5014|5015,1500,2000,15,2000,1800,Y
-4002,1006,2,5000,5013|5014|5015|5016,1000,2000,15,2000,1800,Y
