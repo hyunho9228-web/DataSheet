@@ -6,7 +6,7 @@
 - 원본: [Ingwi_DataTable 구글 시트](https://docs.google.com/spreadsheets/d/1Xn7PQsVVOY2dE_aiTLcrFxN08fgGxDH5hpaEGJBBbG8/edit)
 - 기획은 구글 시트 하나에서 고칩니다(탭끼리 수식·밸런스 계산이 이어져 있어서).
 - 저장소에는 그 시트를 **테이블별 xlsx 파일**(`tables/`)로 나눠 올립니다. 값만 들어 있고 수식은 없습니다.
-- `csv/`는 그 파일들을 개발팀 추출기로 뽑은 결과입니다.
+- 각 시트 2행 기능(B2) 앞에 내보낼 형식이 적혀 있습니다: `JSON,` = UnitState(BossState·PlayerState·EliteState)·Item, `CSV,` = 나머지. 추출기는 개발팀이 만듭니다.
 - 파일·폴더·탭 이름에는 한글을 쓰지 않습니다.
 
 ## 로컬 폴더 구성
@@ -47,12 +47,12 @@ Data/
 │   └── String.xlsx
 ├── stats/
 │   └── item/<ID>.json    ← 아이템 스탯 JSON (Item 시트 StatJson 열이 가리킴)
-└── csv/                  ← 개발팀 추출기 결과 자리 (아직 없음, 예전 추출본은 열이 바뀌어 지움)
+└── (추출 결과 CSV·JSON)   ← 개발팀 추출기가 정함 (예전 csv/ 추출본은 열이 바뀌어 지움)
 ```
 
-CSV 추출기는 개발팀이 만들어 관리합니다.
+추출기(xlsx → CSV·JSON)는 개발팀이 만들어 관리합니다.
 
-대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 아이템(무기·방어구·소모품)은 `Item` 시트 하나에 모으고 `ItemType`으로 구분합니다. 분류 값(ItemType 등)은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
+대부분 파일 1개 = 시트 1개입니다. 플레이어·엘리트·보스의 상태(한 행 = 상태 오브젝트 하나, 같은 UnitID끼리 묶으면 유닛별 상태 배열)는 `UnitState.xlsx` 한 파일에 시트로 나눠 넣습니다. 아이템(무기·방어구·소모품)은 `Item` 시트 하나에 모으고 `ItemType`으로 구분합니다. 무기는 지금 2종입니다: 버선칼 6002(시작 무기), 쇠메 6003(완성판). 발골칼은 해체 연출에만 쓰여 아이템이 아니라서 뺐고, 6001 번호는 다시 쓰지 않습니다. 분류 값(ItemType 등)은 개발에서 enum으로 쓰는 고정 영어 키입니다. 허용 값 목록은 구글 시트 README 탭 "정해진 단어"와 각 시트 1행에 있습니다. 어느 시트가 어느 파일에 들어가는지는 REGISTRY의 `File` 열이 정합니다.
 
 구글 시트의 README·Reference·StatCurve·Balance 탭은 기획 설명·계산용이라 저장소에 올리지 않습니다.
 
@@ -60,9 +60,9 @@ CSV 추출기는 개발팀이 만들어 관리합니다.
 
 | 항목 | 규칙 |
 |---|---|
-| 행 구성 | 1~5행 규칙·기능·역할·의도·비고(CSV에서 빠짐), 6행 열 이름, 7행부터 데이터 |
+| 행 구성 | 1~5행 규칙·기능·역할·의도·비고(추출에서 빠짐), 6행 열 이름, 7행부터 데이터 |
 | 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(REGISTRY, UnitStat, Player, Monster, Attack, Skill, Stage, StageLayer, State, String) |
-| 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **CSV에서 뺌**. ID 열은 비고에 넣을 수 없음 |
+| 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **추출에서 뺌**. ID 열은 비고에 넣을 수 없음 |
 | 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
 | ID | 각 탭 A열 숫자 ID. **중복 금지**. 탭별 구간은 REGISTRY의 IDRange |
@@ -75,19 +75,24 @@ CSV 추출기는 개발팀이 만들어 관리합니다.
 | 거리·속도 | 타일 × 100 |
 | 표시 텍스트 | 직접 쓰지 않고 String 키로 참조 |
 
-## CSV 형식
+## 출력 형식 (CSV·JSON)
 
+형식은 시트 2행 기능 앞(`CSV,` / `JSON,`)이 정합니다. 둘 다 **한글 금지**입니다. 인코딩 문제를 막으려고 내보내는 값에는 영어·숫자·기호만 둡니다(SILENT와 같은 규칙). 한글은 5행 비고에 적은 열(Name·Note 등)에만 씁니다.
+
+CSV
 - UTF-8(BOM 없음), 줄바꿈 LF, 쉼표 구분
 - 첫 줄 = 열 이름(시트 6행, 비고 열 제외), 둘째 줄부터 데이터
-- **한글 금지.** 인코딩 문제를 막으려고 CSV에는 영어·숫자·기호만 둡니다(SILENT와 같은 규칙).
-  한글은 5행 비고에 적은 열(Name·Note 등)에만 씁니다.
 - 값 안에 쉼표가 있으면 큰따옴표로 감쌈(표준 CSV)
+
+JSON (UnitState 세 시트, Item)
+- 한 행 = 오브젝트 하나, 키 = 6행 열 이름(비고 열 제외). 상태 시트는 같은 UnitID끼리 묶어 유닛별 배열로 씀
+- 정확한 모양은 개발팀 추출기가 정함
 
 ## 데이터 고치는 순서
 
-1. 구글 시트를 고칩니다. (`tables/`·`csv/` 파일을 직접 고치지 않습니다. 다음에 다시 나눌 때 덮어써집니다.)
+1. 구글 시트를 고칩니다. (`tables/`·추출 결과 파일을 직접 고치지 않습니다. 다음에 다시 나눌 때 덮어써집니다.)
 2. 시트를 xlsx로 받아 탭별 파일로 나눠 `tables/`를 덮어씁니다(값만, 설명·계산 탭 제외). 지금은 기획 쪽에서 Claude에게 요청해 나눕니다.
-3. 개발팀 추출기로 `tables/`에서 `csv/`를 다시 만듭니다.
+3. 개발팀 추출기로 `tables/`에서 CSV·JSON을 다시 만듭니다.
 4. `git diff`로 바뀐 값을 확인하고 커밋합니다. 커밋 메시지에 무엇을 왜 바꿨는지 적습니다.
    예: `Monster: 허수귀 HP 35→40 (시연 난이도 조정)`
 
@@ -113,10 +118,23 @@ Item 시트의 `StatJson` 열에 파일 경로(저장소 기준)를 적고, 파�
 | `statType` | enum. UnitStat 열 이름과 같음: `HP`, `ATK`, `DEF`, `Dodge`, `Crit`, `CritMult`, `Poise`, `MoveSpeed` |
 | `value` | 정수. 시트 단위 규칙 그대로(비율·확률은 만분율, 200 = 2%). 음수면 감소 |
 
-- 스탯이 없으면 빈 배열 `[]` (예: 발골칼 6001, 기본 스탯은 UnitStat에 있음)
+- 스탯이 없으면 빈 배열 `[]` (기본 스탯은 UnitStat에 있음)
 - 파일 이름은 아이템 ID: `stats/item/6002.json`. 한글 금지
-- 지금 들어 있는 값(버선칼·쇠메·버선·약초)은 형식을 보여 주는 예시이며 미확정입니다
+- 지금 들어 있는 파일은 6002 버선칼, 6003 쇠메, 6101 버선, 6201 약초입니다. 값은 형식을 보여 주는 예시이며 미확정입니다
 - statType을 늘릴 때는 이 표와 구글 시트 README 탭 "정해진 단어"를 같이 고칩니다
+
+## 변경 기록
+
+**10/29**
+- SILENT식 숫자 ID로 개편, 탭별 ID 구간, REGISTRY 시트 추가 (지운 번호는 다시 쓰지 않음)
+- 구글 시트 제목 `Ingwi_DataTable`. 파일·폴더·탭 이름과 내보내는 값에 한글 금지
+- 저장소를 테이블별 xlsx(`tables/`)로 나눔. 추출기는 개발팀 담당. main에 바로 올림
+- State 분류 변경(Common 9개, Stun·Skill2·Skill3·Bound·PhaseChange 추가)
+- 상태 시트 PlayerState·EliteState·BossState 추가 → `UnitState.xlsx` (구조 예시·미확정). UnitStat Type에 Elite
+- Active 열은 REGISTRY·Stage에만 남김
+- 아이템을 Item 한 시트로 합침, ItemType enum, StatJson → `stats/item/<ID>.json`
+- 각 시트 2행 기능 앞에 출력 형식 `CSV,` / `JSON,` 표시
+- 무기 2종으로 정리: 버선칼 6002 = 시작 무기(START, 지스타, 공격 5001~5004, 스킬 7001), 쇠메 6003 = 완성판. 발골칼 6001은 해체 연출용이라 Item에서 빼고 `stats/item/6001.json` 삭제. Player.StartWeapon·Skill.WeaponID → 6002
 
 ## Unity 연동 (제안, 메인 개발과 확정 필요)
 
