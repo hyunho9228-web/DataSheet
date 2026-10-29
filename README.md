@@ -61,6 +61,7 @@ CSV 추출기는 개발팀이 만들어 관리합니다.
 | 항목 | 규칙 |
 |---|---|
 | 행 구성 | 1~5행 규칙·기능·역할·의도·비고(CSV에서 빠짐), 6행 열 이름, 7행부터 데이터 |
+| 출력 형식 | 2행 기능(B2)이 `JSON,` 또는 `CSV,`로 시작함. **JSON**: UnitState(BossState·PlayerState·EliteState), Item. **CSV**: 나머지 전부(REGISTRY, UnitStat, Player, Monster, Attack, Skill, Stage, StageLayer, State, String) |
 | 비고 열 | 5행 비고(B5)에 적은 열(예: `Name, Note`)은 기획용이라 **CSV에서 뺌**. ID 열은 비고에 넣을 수 없음 |
 | 한글 | 비고 열에만. 내보내는 열의 값·열 이름은 영어·숫자만 |
 | 데이터 끝 | A열이 빈 첫 행에서 끝. 그 아래 계산·JSON 예시(UnitStat·Stage)는 내보내지 않음 |
