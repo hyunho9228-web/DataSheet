@@ -2,11 +2,21 @@ using DataSheet.Export;
 using System.Security.Cryptography;
 using System.Text;
 
+int exitCode = Run(args);
+if (args.Length == 0 && !Console.IsInputRedirected)
+{
+    Console.WriteLine("Enter 키를 누르면 종료합니다.");
+    Console.ReadLine();
+}
+return exitCode;
+
+static int Run(string[] args)
+{
 try
 {
-    if (args.Any(argument => argument is not ("--check" or "--deploy"))) throw new ArgumentException("사용법: --check 또는 --deploy");
-    bool deploy = args.Contains("--deploy");
-    string root = Directory.GetCurrentDirectory();
+    if (args.Length > 1 || args.Any(argument => argument is not ("--check" or "--deploy"))) throw new ArgumentException("사용법: DeployData.exe [--check | --deploy]");
+    bool deploy = args.Length == 0 || args.Contains("--deploy");
+    string root = Directory.Exists(Path.Combine(AppContext.BaseDirectory, "tables")) ? AppContext.BaseDirectory : Directory.GetCurrentDirectory();
     if (!Directory.Exists(Path.Combine(root, "tables"))) throw new DirectoryNotFoundException("DataSheet 폴더에서 실행해 주세요.");
     string lockName = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(root).ToUpperInvariant())));
     using var mutex = new Mutex(false, "DataSheetExport_" + lockName);
@@ -37,3 +47,4 @@ try
     return 0;
 }
 catch (Exception error) { Console.Error.WriteLine(error.Message); return 1; }
+}

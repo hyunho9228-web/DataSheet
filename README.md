@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart LR
-    A[기획자: tables의 엑셀 수정] --> B[DeployData.cmd 실행]
+    A[기획자: tables의 엑셀 수정] --> B[DeployData.exe 실행]
     B --> C[기존 탭 B1~B5 규칙 읽기]
     C --> D[타입·범위·중복·참조 검사]
     D --> E[Windows 임시 폴더에 CSV / JSON / C# 생성]
@@ -18,12 +18,12 @@ flowchart LR
 
 ## 실행
 
-.NET 10 SDK가 필요합니다. 기획자는 `DeployData.cmd`를 더블클릭합니다. 오류가 있으면 클라이언트 파일을 바꾸지 않습니다. 배포 중 파일 쓰기에 실패하면 기존 상태로 원복합니다. 원복까지 실패한 경우에만 복구 자료를 Windows 임시 폴더에 보존하고 그 위치를 표시합니다.
+기획자는 Git으로 받은 `DeployData.exe`를 더블클릭합니다. Windows x64용이며 .NET SDK·런타임 설치가 필요하지 않습니다. EXE 옆에 tables 폴더가 있어야 합니다. 인자 없이 실행하면 검사 후 배포하고 결과 창에서 Enter를 기다립니다. 기존 `DeployData.cmd`도 같은 EXE를 실행합니다. 오류가 있으면 클라이언트 파일을 바꾸지 않습니다. 배포 중 파일 쓰기에 실패하면 기존 상태로 원복합니다. 원복까지 실패한 경우에만 복구 자료를 Windows 임시 폴더에 보존하고 그 위치를 표시합니다.
 
 검사만 실행하려면 DataSheet 폴더에서 다음 명령을 사용합니다.
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File Tools/Run-DataExport.ps1 -Mode Check
+.\DeployData.exe --check
 ```
 
 설명과 작성 예시는 [기획자 가이드](Docs/PlannerGuide.md)를 참고합니다.
@@ -49,7 +49,7 @@ flowchart TD
 
 `.datasheet-generated.json`은 클라이언트에 남기는 생성 파일 소유 목록입니다. 다음 배포에서 사라진 시트의 생성 파일을 식별하고 수동 파일 덮어쓰기를 막기 위해 사용합니다. Unity `.meta`는 유지합니다.
 
-DataSheet에는 생성된 CSV·JSON·C# 복사본, outputs, bin, obj를 남기지 않습니다. 실행 배치는 빌드도 임시 폴더에서 수행하고 종료할 때 정리합니다. 원본 `stats/item/*.json`은 기획 예시이며 공식 배포 대상이 아닙니다.
+DataSheet에는 생성된 CSV·JSON·C# 복사본, outputs, bin, obj를 남기지 않습니다. 기획자 실행 시 도구를 빌드하지 않습니다. `DeployData.exe`는 Git으로 공유할 필수 실행 도구이므로 저장소에 둡니다. 개발자 빌드는 임시 폴더에서 수행하고 종료할 때 정리합니다. 원본 `stats/item/*.json`은 기획 예시이며 공식 배포 대상이 아닙니다.
 
 ## 기존 엑셀의 지정 규칙
 
@@ -141,3 +141,22 @@ Item JSON은 객체 배열이며 상태 JSON 3개는 UnitID별 `States` 배열�
 Buff는 현재 데이터 형태만 처리합니다. 실제 효과 적용, 스폰 JSON 원본·추출, 몬스터 풀링 설정, 예시 아이템 스탯 JSON의 공식 생성 규칙은 확정 후 추가합니다. 보류된 스폰 파일이나 예시 StatJson의 실제 존재 여부를 검사하지 않습니다. 이번 작업에서 네트워크 기능을 추가하지 않습니다.
 
 검사 코드 실행: `dotnet run --project Tools/DataExporter.Checks` (개발용 빌드 캐시는 Windows 임시 폴더에 위치).
+
+## 실행파일 갱신 (개발자)
+
+```mermaid
+flowchart LR
+    S[도구 소스 수정] --> B[Publish-DataExport.ps1]
+    B --> R[Windows 런타임 + 내장 C# 검사기 포함]
+    R --> V[새 EXE로 현재 시트 검사]
+    V --> E[루트 DeployData.exe 교체]
+    E --> G[소스와 EXE 함께 Git에 반영]
+```
+
+실행파일을 만드는 개발 PC에만 .NET 10 SDK와 최초 런타임 패키지 다운로드가 필요합니다.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File Tools/Publish-DataExport.ps1
+```
+
+Windows x64 단일 EXE를 만들고 데이터 검사를 통과한 뒤 교체합니다. 생성된 C#은 실행파일에 포함한 Roslyn과 참조 어셈블리로 C# 9 문법·타입 검사를 수행하므로 기획자 PC에서 dotnet 프로세스를 실행하지 않습니다. 도구 소스를 바꾸면 EXE도 다시 빌드하여 함께 반영해야 합니다. 데이터 값만 바꿀 때는 EXE를 다시 만들 필요가 없습니다. .NET 단일 파일 실행을 위한 네이티브 라이브러리 추출 캐시는 Windows 임시 영역에서 런타임이 관리합니다.

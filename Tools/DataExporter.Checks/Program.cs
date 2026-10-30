@@ -24,6 +24,9 @@ TypedRow badRow = units.Rows[0] with { Cells = units.Rows[0].Cells.ToDictionary(
 Assert(new DataValidator().Validate(data.Tables.Select(table => table == units ? units with { Rows = new[] { badRow }.Concat(units.Rows.Skip(1)).ToArray() } : table).ToArray()).Any(issue => issue.Column == "Dodge"), "확률 범위 검사 누락");
 string classes = workspace.Folder("Classes"); new CodeGenerator().Generate(data, classes);
 new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
+string invalidClasses = workspace.Folder("InvalidClasses");
+File.WriteAllText(Path.Combine(invalidClasses, "Invalid.cs"), "public sealed class Invalid { public MissingType Value { get; } }");
+Fails(() => new GeneratedCodeCompiler().Compile(invalidClasses, workspace.Folder("InvalidCompile")), "내장 C# 검사기의 잘못된 타입 감지 실패");
 Assert(Directory.GetFiles(classes, "*.cs").Length == 17, "생성 클래스 수 오류");
 Assert(!File.ReadAllText(Path.Combine(classes, "Player.cs")).Contains("public int HP"), "상속 스탯 중복 선언");
 string fixture = workspace.Folder("Fixture"); Directory.CreateDirectory(Path.Combine(fixture, "tables"));
