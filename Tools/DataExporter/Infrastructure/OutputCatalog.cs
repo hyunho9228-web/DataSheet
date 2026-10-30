@@ -5,7 +5,10 @@ public sealed record OutputFile(string RelativePath, string SourcePath);
 public static class OutputCatalog
 {
     public static string DataFolder(OutputFormat format) => format == OutputFormat.Csv ? "Assets/Data/Csv" : "Assets/Data/Json";
-    public const string ClassesFolder = "Assets/Scripts/Data";
+    public const string ClassesFolder = "Assets/3.Script/Data";
+    private const string _legacyClassesFolder = "Assets/Scripts/Data";
+    public static string NormalizePath(string path) => path.StartsWith(_legacyClassesFolder + "/", StringComparison.OrdinalIgnoreCase)
+        ? ClassesFolder + path[_legacyClassesFolder.Length..] : path;
     public static bool IsCode(string path) => path.StartsWith(ClassesFolder + "/", StringComparison.OrdinalIgnoreCase)
         && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
     public static bool IsOwnedPath(string path)

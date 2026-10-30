@@ -39,13 +39,13 @@ flowchart TD
     D --> G[Docs: 기획자 설명]
     S --> C[Assets/Data/Csv]
     S --> J[Assets/Data/Json]
-    S --> K[Assets/Scripts/Data]
+    S --> K[Assets/3.Script/Data]
     U --> C
     U --> J
     U --> K
 ```
 
-배포 경로는 DataSheet를 기준으로 `../Human_Ghost-/Assets/Data/Csv`, `../Human_Ghost-/Assets/Data/Json`, `../Human_Ghost-/Assets/Scripts/Data`입니다. 클라이언트는 검사가 끝난 파일을 신뢰하여 읽고 변환합니다. 이 도구의 검사 코드를 클라이언트에 배포하지 않습니다.
+배포 경로는 DataSheet를 기준으로 `../Human_Ghost-/Assets/Data/Csv`, `../Human_Ghost-/Assets/Data/Json`, `../Human_Ghost-/Assets/3.Script/Data`입니다. 클라이언트는 검사가 끝난 파일을 신뢰하여 읽고 변환합니다. 이 도구의 검사 코드를 클라이언트에 배포하지 않습니다.
 
 `.datasheet-generated.json`은 클라이언트에 남기는 생성 파일 소유 목록입니다. 다음 배포에서 사라진 시트의 생성 파일을 식별하고 수동 파일 덮어쓰기를 막기 위해 사용합니다. Unity `.meta`는 유지합니다.
 

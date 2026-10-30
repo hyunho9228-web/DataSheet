@@ -66,6 +66,7 @@ public sealed class DeploymentService
         using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(path));
         JsonElement root = document.RootElement;
         JsonElement files = root.ValueKind == JsonValueKind.Array ? root : root.TryGetProperty("Files", out JsonElement value) ? value : root.GetProperty("files");
-        return files.EnumerateArray().Select(item => item.ValueKind == JsonValueKind.String ? item.GetString()! : item.TryGetProperty("Path", out JsonElement property) ? property.GetString()! : item.GetProperty("relativePath").GetString()!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return files.EnumerateArray().Select(item => item.ValueKind == JsonValueKind.String ? item.GetString()! : item.TryGetProperty("Path", out JsonElement property) ? property.GetString()! : item.GetProperty("relativePath").GetString()!)
+            .Select(OutputCatalog.NormalizePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 }
