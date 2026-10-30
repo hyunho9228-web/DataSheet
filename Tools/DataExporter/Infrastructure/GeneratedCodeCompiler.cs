@@ -7,6 +7,9 @@ namespace DataSheet.Export;
 public sealed class GeneratedCodeCompiler
 {
     public void Compile(string classes, string folder)
+        => CompileSources(Directory.EnumerateFiles(classes, "*.cs"));
+
+    public byte[] CompileSources(IEnumerable<string> paths)
     {
         Assembly assembly = typeof(GeneratedCodeCompiler).Assembly;
         var references = new List<MetadataReference>();
@@ -17,12 +20,15 @@ public sealed class GeneratedCodeCompiler
         }
         if (references.Count == 0) throw new InvalidDataException("내장 C# 검사 참조가 없습니다. 실행파일을 다시 빌드해 주세요.");
         var options = new CSharpParseOptions(LanguageVersion.CSharp9);
-        SyntaxTree[] sources = Directory.EnumerateFiles(classes, "*.cs").Order(StringComparer.Ordinal)
+        SyntaxTree[] sources = paths.Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal)
             .Select(path => CSharpSyntaxTree.ParseText(File.ReadAllText(path), options, path)).ToArray();
         var compilation = CSharpCompilation.Create("GeneratedCheck", sources, references,
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, generalDiagnosticOption: ReportDiagnostic.Error));
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, generalDiagnosticOption: ReportDiagnostic.Error)
+                // 내장 라이브러리의 이전 실행 환경 참조는 현재 실행 환경으로 통합합니다.
+                .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic> { ["CS1701"] = ReportDiagnostic.Suppress }));
         using var output = new MemoryStream();
         var result = compilation.Emit(output);
         if (!result.Success) throw new InvalidDataException("생성 C# 컴파일 실패\n" + string.Join("\n", result.Diagnostics.Where(item => item.Severity == DiagnosticSeverity.Error)));
+        return output.ToArray();
     }
 }

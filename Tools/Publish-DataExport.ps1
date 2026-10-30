@@ -19,7 +19,7 @@ try {
     }
     finally { Pop-Location }
     Copy-Item -LiteralPath $executable -Destination (Join-Path $projectRoot 'DeployData.exe') -Force
-    Write-Host 'DeployData.exe 빌드·검사가 완료되었습니다. 소스 변경 시 EXE도 함께 Git에 반영하세요.'
+    Write-Host '배포 실행파일 생성·검사가 완료되었습니다. 소스를 변경하면 실행파일도 함께 버전 관리에 반영하세요.'
     $exitCode = 0
 }
 catch { Write-Host $_.Exception.Message -ForegroundColor Red }

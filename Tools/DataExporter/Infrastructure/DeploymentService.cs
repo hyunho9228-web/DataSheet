@@ -22,8 +22,8 @@ public sealed class DeploymentService
                 if ((File.Exists(part) || Directory.Exists(part)) && File.GetAttributes(part).HasFlag(FileAttributes.ReparsePoint)) throw new IOException("배포 경로에 링크가 있습니다.");
             return path;
         }
-        // C#은 최초 생성만 수행하며 기존 파일은 배포·삭제·원복 대상에서 제외합니다.
-        OutputFile[] pending = files.Where(file => !OutputCatalog.IsCode(file.RelativePath) || !File.Exists(Target(file.RelativePath))).ToArray();
+        // 정의 클래스는 보존하고 자동 로딩 계획만 데이터와 함께 갱신합니다.
+        OutputFile[] pending = files.Where(file => !OutputCatalog.IsCode(file.RelativePath) || OutputCatalog.IsLoadPlan(file.RelativePath) || !File.Exists(Target(file.RelativePath))).ToArray();
         string[] removed = old.Except(current).Where(path => !OutputCatalog.IsCode(path)).ToArray();
         var retained = current.Union(old.Where(OutputCatalog.IsCode)).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (string relative in pending.Select(file => file.RelativePath))
@@ -36,7 +36,7 @@ public sealed class DeploymentService
         {
             foreach (OutputFile file in pending)
             {
-                string path = Target(file.RelativePath); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.Copy(file.SourcePath, path, !OutputCatalog.IsCode(file.RelativePath));
+                string path = Target(file.RelativePath); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.Copy(file.SourcePath, path, !OutputCatalog.IsCode(file.RelativePath) || OutputCatalog.IsLoadPlan(file.RelativePath));
             }
             foreach (string relative in removed) File.Delete(Target(relative));
             File.WriteAllText(manifest, JsonSerializer.Serialize(new { Files = retained.Order(StringComparer.Ordinal).ToArray() }, new JsonSerializerOptions { WriteIndented = true }));

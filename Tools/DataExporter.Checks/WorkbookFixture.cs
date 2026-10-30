@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 internal static class WorkbookFixture
 {
-    public static void Write(string path, string[] sheets)
+    public static void Write(string path, string[] sheets, bool json = false)
     {
         XNamespace sheet = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
         XNamespace relationship = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
@@ -16,7 +16,7 @@ internal static class WorkbookFixture
         foreach (int index in Enumerable.Range(0, sheets.Length))
             Entry("xl/worksheets/sheet" + index + ".xml", new XElement(sheet + "worksheet", new XElement(sheet + "sheetData",
                 new XElement(sheet + "row", new XAttribute("r", 1), Cell("B1", "새 탭\n@column Name=Value;Type=Integer;Minimum=0")),
-                new XElement(sheet + "row", new XAttribute("r", 2), Cell("B2", "CSV,새 테이블")),
+                new XElement(sheet + "row", new XAttribute("r", 2), Cell("B2", (json ? "JSON," : "CSV,") + "새 테이블")),
                 new XElement(sheet + "row", new XAttribute("r", 6), Cell("A6", "ID"), Cell("B6", "Value")),
                 new XElement(sheet + "row", new XAttribute("r", 7), Cell("A7", "1"), Cell("B7", "42")))));
     }

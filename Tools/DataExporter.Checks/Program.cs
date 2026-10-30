@@ -37,6 +37,7 @@ ProjectData added = ProjectData.Load(fixture);
 Assert(added.Tables.Select(table => table.Schema.Name).SequenceEqual(["NewAlpha", "NewBeta"]), "신규 파일·탭 자동 대응 실패");
 string newClasses = workspace.Folder("NewClasses"); new CodeGenerator().Generate(added, newClasses);
 new GeneratedCodeCompiler().Compile(newClasses, workspace.Folder("NewCompile"));
+await AutoLoadingChecks.RunAsync(Assert, workspace);
 }
 string client = workspace.Folder("Client"); Directory.CreateDirectory(Path.Combine(client, "Assets"));
 Directory.CreateDirectory(Path.Combine(client, "ProjectSettings")); File.WriteAllText(Path.Combine(client, "ProjectSettings", "ProjectVersion.txt"), "test");
@@ -77,4 +78,14 @@ File.WriteAllText(Path.Combine(client, ".datasheet-generated.json"), "{\"Files\"
 deployment.Deploy([code], client, workspace);
 Assert(File.ReadAllText(codeTarget) == "client modified class" && File.GetLastWriteTimeUtc(codeTarget) == codeTime, "경로 이전 후 기존 클래스 보존 실패");
 Assert(!Directory.Exists(Path.Combine(client, "Assets", "Scripts")), "이전 스크립트 폴더 재생성");
+var planOutput = new OutputFile(OutputCatalog.LoadPlanPath, codeSource);
+deployment.Deploy([code, planOutput], client, workspace);
+File.WriteAllText(codeSource, "자동 로딩 계획 갱신 검사");
+deployment.Deploy([code, planOutput], client, workspace);
+Assert(File.ReadAllText(Path.Combine(client, OutputCatalog.LoadPlanPath)) == "자동 로딩 계획 갱신 검사", "자동 로딩 계획 갱신 실패");
+Assert(File.ReadAllText(codeTarget) == "client modified class", "자동 로딩 계획 갱신 중 기존 정의 클래스 변경");
+string previousPlan = File.ReadAllText(Path.Combine(client, OutputCatalog.LoadPlanPath));
+File.WriteAllText(codeSource, "원복 검사에 사용할 새 계획");
+Fails(() => deployment.Deploy([code, planOutput, new OutputFile("Assets/Data/Csv/Blocked.csv", source)], client, workspace), "자동 계획 갱신 후 배포 실패 감지 누락");
+Assert(File.ReadAllText(Path.Combine(client, OutputCatalog.LoadPlanPath)) == previousPlan, "배포 실패 시 자동 로딩 계획 원복 실패");
 Console.WriteLine($"검사 {checks}개 통과 ({(args.Contains("--deployment-only") ? "배포 정책" : "전체")}). 임시 파일은 정리합니다.");
