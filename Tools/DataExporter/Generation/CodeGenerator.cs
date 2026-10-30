@@ -4,7 +4,7 @@ namespace DataSheet.Export;
 
 public sealed class CodeGenerator
 {
-    private const string _header = "// 자동 생성 파일입니다. 원본 시트를 수정한 뒤 다시 배포하세요.\nnamespace HumanGhost.Data.Definitions\n{\n";
+    private const string _header = "// 최초 생성 데이터 정의입니다. 기존 파일은 자동 갱신하지 않으므로 시트 구조 변경 시 함께 수정하세요.\nnamespace HumanGhost.Data.Definitions\n{\n";
     public void Generate(ProjectData data, string folder)
     {
         var baseTables = data.Instructions.Values.Where(value => value.BaseName is not null).ToDictionary(value => value.BaseName!, StringComparer.Ordinal);

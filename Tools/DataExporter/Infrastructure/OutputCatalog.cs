@@ -6,6 +6,8 @@ public static class OutputCatalog
 {
     public static string DataFolder(OutputFormat format) => format == OutputFormat.Csv ? "Assets/Data/Csv" : "Assets/Data/Json";
     public const string ClassesFolder = "Assets/Scripts/Data";
+    public static bool IsCode(string path) => path.StartsWith(ClassesFolder + "/", StringComparison.OrdinalIgnoreCase)
+        && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
     public static bool IsOwnedPath(string path)
     {
         string directory = path.Contains('/') ? path[..path.LastIndexOf('/')] : "";

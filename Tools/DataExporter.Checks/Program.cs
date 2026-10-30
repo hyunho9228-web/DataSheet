@@ -9,6 +9,8 @@ void Fails(Action action, string message)
     try { action(); } catch (Exception) { failed = true; }
     Assert(failed, message);
 }
+if (!args.Contains("--deployment-only"))
+{
 ProjectData data = ProjectData.Load(Directory.GetCurrentDirectory());
 Assert(data.Tables.Count == 13, "기존 13개 탭을 읽어야 합니다.");
 foreach (TypedTable table in data.Tables)
@@ -35,6 +37,7 @@ ProjectData added = ProjectData.Load(fixture);
 Assert(added.Tables.Select(table => table.Schema.Name).SequenceEqual(["NewAlpha", "NewBeta"]), "신규 파일·탭 자동 대응 실패");
 string newClasses = workspace.Folder("NewClasses"); new CodeGenerator().Generate(added, newClasses);
 new GeneratedCodeCompiler().Compile(newClasses, workspace.Folder("NewCompile"));
+}
 string client = workspace.Folder("Client"); Directory.CreateDirectory(Path.Combine(client, "Assets"));
 Directory.CreateDirectory(Path.Combine(client, "ProjectSettings")); File.WriteAllText(Path.Combine(client, "ProjectSettings", "ProjectVersion.txt"), "test");
 string source = Path.Combine(workspace.PathName, "NewAlpha.csv"); File.WriteAllText(source, "ID\n1\n");
@@ -50,4 +53,24 @@ string blocked = Path.Combine(client, "Assets", "Data", "Csv", "Blocked.csv"); D
 Fails(() => deployment.Deploy([output, new OutputFile("Assets/Data/Csv/Blocked.csv", source)], client, workspace), "배포 오류 감지 실패");
 Assert(File.ReadAllText(target) == "ID\n1\n", "배포 실패 원복 실패");
 Fails(() => deployment.Deploy([new OutputFile("../escape.csv", source)], client, workspace), "상대 경로 탈출 방지 실패");
-Console.WriteLine($"검사 {checks}개 통과: 기존 시트, 신규 파일·탭, 직렬화, 상속, 컴파일, 배포·원복. 임시 파일은 정리합니다.");
+string codeSource = Path.Combine(workspace.PathName, "NewAlpha.cs"); File.WriteAllText(codeSource, "original class");
+var code = new OutputFile("Assets/Scripts/Data/NewAlpha.cs", codeSource);
+deployment.Deploy([code], client, workspace);
+string codeTarget = Path.Combine(client, code.RelativePath);
+Assert(File.ReadAllText(codeTarget) == "original class", "신규 C# 배포 실패");
+File.WriteAllText(codeTarget, "client modified class");
+DateTime codeTime = File.GetLastWriteTimeUtc(codeTarget);
+File.WriteAllText(codeTarget + ".meta", "code meta");
+File.WriteAllText(codeSource, "new generated class");
+deployment.Deploy([code], client, workspace);
+Assert(File.ReadAllText(codeTarget) == "client modified class" && File.GetLastWriteTimeUtc(codeTarget) == codeTime, "기존 C# 내용·수정시각 변경");
+deployment.Deploy([], client, workspace);
+Assert(File.Exists(codeTarget) && File.ReadAllText(codeTarget + ".meta") == "code meta", "시트 삭제 시 C#·meta 삭제");
+string manualCode = Path.Combine(client, "Assets", "Scripts", "Data", "Manual.cs"); File.WriteAllText(manualCode, "manual class");
+deployment.Deploy([new OutputFile("Assets/Scripts/Data/Manual.cs", codeSource)], client, workspace);
+Assert(File.ReadAllText(manualCode) == "manual class", "목록에 없는 기존 C# 변경");
+var newCode = new OutputFile("Assets/Scripts/Data/NewBeta.cs", codeSource);
+Fails(() => deployment.Deploy([code, newCode, new OutputFile("Assets/Data/Csv/Blocked.csv", source)], client, workspace), "C# 추가 후 배포 오류 감지 실패");
+Assert(!File.Exists(Path.Combine(client, newCode.RelativePath)), "실패한 배포의 신규 C# 원복 실패");
+Assert(File.ReadAllText(codeTarget) == "client modified class" && File.GetLastWriteTimeUtc(codeTarget) == codeTime, "배포 실패 시 기존 C# 변경");
+Console.WriteLine($"검사 {checks}개 통과 ({(args.Contains("--deployment-only") ? "배포 정책" : "전체")}). 임시 파일은 정리합니다.");

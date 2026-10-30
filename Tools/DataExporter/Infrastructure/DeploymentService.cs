@@ -22,20 +22,24 @@ public sealed class DeploymentService
                 if ((File.Exists(part) || Directory.Exists(part)) && File.GetAttributes(part).HasFlag(FileAttributes.ReparsePoint)) throw new IOException("배포 경로에 링크가 있습니다.");
             return path;
         }
-        foreach (string relative in current)
+        // C#은 최초 생성만 수행하며 기존 파일은 배포·삭제·원복 대상에서 제외합니다.
+        OutputFile[] pending = files.Where(file => !OutputCatalog.IsCode(file.RelativePath) || !File.Exists(Target(file.RelativePath))).ToArray();
+        string[] removed = old.Except(current).Where(path => !OutputCatalog.IsCode(path)).ToArray();
+        var retained = current.Union(old.Where(OutputCatalog.IsCode)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (string relative in pending.Select(file => file.RelativePath))
             if (File.Exists(Target(relative)) && !old.Contains(relative)) throw new IOException($"생성기 소유 목록에 없는 기존 파일입니다: {relative}");
-        string[] affected = current.Union(old).Append(_manifest).ToArray();
+        string[] affected = pending.Select(file => file.RelativePath).Union(removed).Append(_manifest).ToArray();
         var snapshot = affected.ToDictionary(relative => relative, relative => File.Exists(Target(relative)) ? File.ReadAllBytes(Target(relative)) : null);
         string backup = workspace.Folder("Backup");
         File.WriteAllText(Path.Combine(backup, "recovery.json"), JsonSerializer.Serialize(new { Client = client, Files = snapshot }));
         try
         {
-            foreach (OutputFile file in files)
+            foreach (OutputFile file in pending)
             {
-                string path = Target(file.RelativePath); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.Copy(file.SourcePath, path, true);
+                string path = Target(file.RelativePath); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.Copy(file.SourcePath, path, !OutputCatalog.IsCode(file.RelativePath));
             }
-            foreach (string relative in old.Except(current)) File.Delete(Target(relative));
-            File.WriteAllText(manifest, JsonSerializer.Serialize(new { Files = current.Order(StringComparer.Ordinal).ToArray() }, new JsonSerializerOptions { WriteIndented = true }));
+            foreach (string relative in removed) File.Delete(Target(relative));
+            File.WriteAllText(manifest, JsonSerializer.Serialize(new { Files = retained.Order(StringComparer.Ordinal).ToArray() }, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch (Exception deployError)
         {
