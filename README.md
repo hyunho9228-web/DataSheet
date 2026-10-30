@@ -23,7 +23,7 @@ flowchart LR
 검사만 실행하려면 DataSheet 폴더에서 다음 명령을 사용합니다.
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File Tools/Run-DataExport.ps1 --check
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File Tools/Run-DataExport.ps1 -Mode Check
 ```
 
 설명과 작성 예시는 [기획자 가이드](Docs/PlannerGuide.md)를 참고합니다.
