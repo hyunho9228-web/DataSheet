@@ -36,7 +36,7 @@ internal static class AutoLoadingChecks
             Assembly assembly = context.LoadFromStream(image);
             object source = Activator.CreateInstance(assembly.GetType("HumanGhost.Data.Infrastructure.Utf8CsvFileSource")!)!;
             Type bootstrapType = assembly.GetType("HumanGhost.Data.Infrastructure.DataBootstrapper")!;
-            object bootstrap = Activator.CreateInstance(bootstrapType, source, new Func<string, string>(path => Path.Combine(root, path)))!;
+            object bootstrap = Activator.CreateInstance(bootstrapType, source, new Func<string, string>(path => Path.Combine(root, path)), null)!;
             Task task = (Task)bootstrapType.GetMethod("InitializeAsync")!.Invoke(bootstrap, [CancellationToken.None])!;
             await task;
             object catalog = task.GetType().GetProperty("Result")!.GetValue(task)!;

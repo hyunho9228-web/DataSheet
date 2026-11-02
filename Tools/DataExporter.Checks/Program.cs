@@ -12,7 +12,10 @@ void Fails(Action action, string message)
 if (!args.Contains("--deployment-only"))
 {
 ProjectData data = ProjectData.Load(Directory.GetCurrentDirectory());
-Assert(data.Tables.Count == 13, "기존 13개 탭을 읽어야 합니다.");
+int expectedTables = Directory.EnumerateFiles("tables", "*.xlsx", SearchOption.AllDirectories)
+    .Where(path => !Path.GetFileName(path).StartsWith("~$", StringComparison.Ordinal))
+    .Sum(path => new SheetRuleReader().Read(new ExcelTableReader().Read(path)).Count);
+Assert(data.Tables.Count == expectedTables, "전체 파일의 추출 대상 탭을 읽어야 합니다.");
 foreach (TypedTable table in data.Tables)
 {
     string path = Path.Combine(workspace.PathName, table.Schema.Name + TableSerializers.For(table.Schema.Format).Extension);
@@ -29,7 +32,22 @@ new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
 string invalidClasses = workspace.Folder("InvalidClasses");
 File.WriteAllText(Path.Combine(invalidClasses, "Invalid.cs"), "public sealed class Invalid { public MissingType Value { get; } }");
 Fails(() => new GeneratedCodeCompiler().Compile(invalidClasses, workspace.Folder("InvalidCompile")), "내장 C# 검사기의 잘못된 타입 감지 실패");
-Assert(Directory.GetFiles(classes, "*.cs").Length == 17, "생성 클래스 수 오류");
+Assert(data.Tables.All(table => File.Exists(Path.Combine(classes, table.Schema.Name + ".cs"))), "테이블 정의 클래스 생성 누락");
+var prefabValidator = new HealthDisplayPrefabValidator();
+prefabValidator.Validate(data, Path.GetFullPath("../Human_Ghost-"));
+TypedTable healthTable = data.Tables.Single(table => table.Schema.Name == "HealthDisplayConfig");
+var prefabCell = new TypedCell(healthTable.Schema.Columns.Single(column => column.Name == "PrefabKey"),
+    "PlayerHealthBar", new SourceLocation("검사 자료", "HealthDisplayConfig", "B7"));
+ProjectData prefabData = data with { Tables = [healthTable with
+    { Rows = [new TypedRow(7, new Dictionary<string, TypedCell> { ["PrefabKey"] = prefabCell })] }] };
+string prefabClient = workspace.Folder("PrefabClient");
+string prefabFolder = Directory.CreateDirectory(Path.Combine(prefabClient, "Assets", "2.Model", "Prefabs", "UI")).FullName;
+Fails(() => prefabValidator.Validate(prefabData, prefabClient), "프리팹 누락 검사 실패");
+File.WriteAllText(Path.Combine(prefabFolder, "PlayerHealthBar.prefab"), "프리팹 존재 검사 자료");
+prefabValidator.Validate(prefabData, prefabClient);
+Directory.CreateDirectory(Path.Combine(prefabFolder, "Other"));
+File.WriteAllText(Path.Combine(prefabFolder, "Other", "PlayerHealthBar.prefab"), "중복 검사 자료");
+Fails(() => prefabValidator.Validate(prefabData, prefabClient), "프리팹 이름 중복 검사 실패");
 Assert(!File.ReadAllText(Path.Combine(classes, "Player.cs")).Contains("public int HP"), "상속 스탯 중복 선언");
 string fixture = workspace.Folder("Fixture"); Directory.CreateDirectory(Path.Combine(fixture, "tables"));
 WorkbookFixture.Write(Path.Combine(fixture, "tables", "NewWorkbook.xlsx"), ["NewAlpha", "NewBeta"]);

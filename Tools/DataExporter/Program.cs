@@ -28,6 +28,8 @@ try
         using var workspace = new TemporaryWorkspace();
         Console.WriteLine("시트의 지정 규칙·값·참조를 검사합니다.");
         ProjectData data = ProjectData.Load(root);
+        string client = Path.GetFullPath(Path.Combine(root, "..", "Human_Ghost-"));
+        new HealthDisplayPrefabValidator().Validate(data, client);
         string classes = workspace.Folder("Classes"), outputs = workspace.Folder("Data");
         var files = new List<OutputFile>();
         foreach (TypedTable table in data.Tables)
@@ -39,7 +41,6 @@ try
         }
         new CodeGenerator().Generate(data, classes);
         new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
-        string client = Path.GetFullPath(Path.Combine(root, "..", "Human_Ghost-"));
         string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("LoadPlan"));
         new ClientLoadPlanCompiler().Compile(client, classes, plan);
         files.AddRange(Directory.EnumerateFiles(classes, "*.cs").Select(path => new OutputFile(OutputCatalog.ClassesFolder + "/" + Path.GetFileName(path), path)));
