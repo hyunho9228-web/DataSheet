@@ -35,7 +35,9 @@ public sealed record ProjectData(IReadOnlyList<TypedTable> Tables, IReadOnlyDict
         if (result.Count == 0) throw new InvalidDataException("추출할 데이터 시트가 없습니다.");
         issues.AddRange(new DataValidator().Validate(result));
         if (issues.Count > 0) throw new InvalidDataException(string.Join(Environment.NewLine, issues));
-        return new(result.AsReadOnly(), instructions);
+        var data = new ProjectData(result.AsReadOnly(), instructions);
+        new CutsceneDataValidator().Validate(data);
+        return data;
     }
 }
 

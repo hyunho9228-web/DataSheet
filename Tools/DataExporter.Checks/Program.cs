@@ -12,6 +12,7 @@ void Fails(Action action, string message)
 if (!args.Contains("--deployment-only"))
 {
 ProjectData data = ProjectData.Load(Directory.GetCurrentDirectory());
+CutsceneValidationChecks.Run(data, Assert, Fails);
 int expectedTables = Directory.EnumerateFiles("tables", "*.xlsx", SearchOption.AllDirectories)
     .Where(path => !Path.GetFileName(path).StartsWith("~$", StringComparison.Ordinal))
     .Sum(path => new SheetRuleReader().Read(new ExcelTableReader().Read(path)).Count);
