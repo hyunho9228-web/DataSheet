@@ -1,4 +1,10 @@
-# DataSheet
+﻿# DataSheet
+
+Stage.xlsx의 GateConfig를 작성할 때는 [기획자용 관문 데이터 작성과 확인 안내](../Human_Ghost-/Docs/기획자용%20안내문서/기획자용%20관문%20데이터%20작성과%20확인%20안내.md)를 따릅니다. 한 관문당 한 행을 작성하고 기존 관문의 ID는 유지합니다.
+
+
+2026-11-05 관문 저장 연결: Stage.xlsx의 기존 Stage 탭을 보존하고 GateConfig 탭에 관문 정수 ID·StageID·AnchorName을 추가했습니다. 19개 데이터 탭·정의23·자동 계획1·스폰3을 기존 도구로 검사·배포했습니다. 클라이언트 저장 스키마는 정수 형식을 유지하며, 몬스터별 처치/리스폰 데이터는 별도 준비 대기입니다.
+
 
 2026-11-04: DeployData.exe --check는17탭·정의21·자동계획1·스폰JSON3으로 통과했습니다. 클라이언트 c7100e3은 현재 SpawnTemp의30마리·매복을 참조하며 이 저장소의 정식 스폰 배포본은 각4마리입니다. 실제 스폰 변경을 반영하려면 원본·배포·StageContentSet 참조를 함께 맞춰야 합니다. [클라이언트 현황](../Human_Ghost-/Docs/%EA%B0%9C%EB%B0%9C%EC%9E%90%EC%9A%A9%20%EC%84%A4%EA%B3%84%EB%AC%B8%EC%84%9C/%ED%98%84%EC%9E%AC%20%EA%B5%AC%ED%98%84%EA%B3%BC%20%EA%B2%80%EC%A6%9D%20%ED%98%84%ED%99%A9.md)과 [회의·잔여 작업](../Human_Ghost-/Docs/%EA%B0%9C%EB%B0%9C%EC%9E%90%EC%9A%A9%20%EC%84%A4%EA%B3%84%EB%AC%B8%EC%84%9C/%EB%82%A8%EC%9D%80%20%EA%B5%AC%ED%98%84%EA%B3%BC%20%EA%B2%80%EC%A6%9D%20%EC%9E%91%EC%97%85.md)을 확인합니다.
 
