@@ -110,13 +110,13 @@ Assert(File.ReadAllText(Path.Combine(client, OutputCatalog.LoadPlanPath)) == pre
 string spawnRoot = workspace.Folder("SpawnSource");
 string spawnFolder = Directory.CreateDirectory(Path.Combine(spawnRoot, "spawn")).FullName;
 string spawnSource = Path.Combine(spawnFolder, "8002.json");
-File.WriteAllText(spawnSource, "{\"FormatVersion\":2}");
+File.WriteAllText(spawnSource, "{\"FormatVersion\":2,\"MaxMonsterCount\":30}");
 var collector = new SpawnFileCollector();
 var spawnFiles = collector.Collect(spawnRoot, workspace.Folder("SpawnSnapshot"));
 deployment.Deploy(spawnFiles, client, workspace);
 string spawnTarget = Path.Combine(client, OutputCatalog.SpawnFolder, "8002.json");
 Assert(File.ReadAllText(spawnTarget) == File.ReadAllText(spawnSource), "신규 스폰 JSON 배포 실패");
-File.WriteAllText(spawnSource, "{\"FormatVersion\":3}");
+File.WriteAllText(spawnSource, "{\"FormatVersion\":3,\"MaxMonsterCount\":30}");
 spawnFiles = collector.Collect(spawnRoot, workspace.Folder("SpawnUpdate"));
 deployment.Deploy(spawnFiles, client, workspace);
 Assert(File.ReadAllText(spawnTarget).Contains(":3"), "수정 스폰 JSON 덮어쓰기 실패");
@@ -124,4 +124,29 @@ Fails(() => deployment.Deploy([new OutputFile("Assets/Data/Json/spawn/../8002.js
 File.WriteAllText(spawnSource, "{");
 Fails(() => collector.Collect(spawnRoot, workspace.Folder("InvalidSpawn")), "잘못된 스폰 JSON 허용");
 Assert(File.ReadAllText(spawnTarget).Contains(":3"), "원본 오류로 기존 스폰 배포값 변경");
+// 상한은 도구의 고정 숫자가 아니라 각 JSON의 값입니다.
+string Layout(int maximum, params int[] counts) => System.Text.Json.JsonSerializer.Serialize(new
+{
+    FormatVersion = 2, StageID = 8002, MaxMonsterCount = maximum,
+    Placements = counts.Select((count, index) => new { PlacementID = index + 1,
+        Monsters = new[] { new { MonsterCode = 3001, MonsterCount = count,
+            Points = Enumerable.Range(0, count).Select(i => new[] { i * 100, 0 }).ToArray() } } }).ToArray()
+});
+void CheckLayout(string json) => File.WriteAllText(spawnSource, json);
+CheckLayout(Layout(30, 14, 16));
+Assert(collector.Collect(spawnRoot, workspace.Folder("SpawnLimit30")).Count == 1, "최대 30마리 배포 허용");
+CheckLayout(Layout(30, 14, 17));
+Fails(() => collector.Collect(spawnRoot, workspace.Folder("SpawnOverLimit")), "여러 배치 합계 상한 초과 허용");
+CheckLayout(Layout(12, 6, 6));
+Assert(collector.Collect(spawnRoot, workspace.Folder("SpawnLimit12")).Count == 1, "JSON별 상한 변경 미반영");
+CheckLayout(Layout(31, 31));
+Assert(collector.Collect(spawnRoot, workspace.Folder("SpawnLimit31")).Count == 1, "도구에 30마리 상한 하드코딩");
+CheckLayout(Layout(0));
+Assert(collector.Collect(spawnRoot, workspace.Folder("SpawnEmpty")).Count == 1, "몬스터 없는 맵의 최대 0 허용");
+CheckLayout("{\"FormatVersion\":2}");
+Fails(() => collector.Collect(spawnRoot, workspace.Folder("SpawnNoLimit")), "최대 수 누락 허용");
+CheckLayout(Layout(-1));
+Fails(() => collector.Collect(spawnRoot, workspace.Folder("SpawnNegativeLimit")), "음수 최대 수 허용");
+CheckLayout(Layout(20, 30).Replace("\"MonsterCount\":30", "\"MonsterCount\":1"));
+Fails(() => collector.Collect(spawnRoot, workspace.Folder("SpawnPositionLimit")), "위치 수에 의한 상한 초과 허용");
 Console.WriteLine($"검사 {checks}개 통과 ({(args.Contains("--deployment-only") ? "배포 정책" : "전체")}). 임시 파일은 정리합니다.");
