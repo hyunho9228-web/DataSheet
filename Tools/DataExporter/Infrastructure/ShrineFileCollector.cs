@@ -23,6 +23,8 @@ public sealed class ShrineFileCollector
             if (Path.GetRelativePath(source, file) == "shrine_level.json")
             {
                 int maximum = Integer(value, "maxLevel", 1, file);
+                Integer(value, "soulCostBase", 1, file);
+                Integer(value, "soulCostRate", 10000, file);
                 Reference("Currency", Integer(value, "soulCurrencyId", 1, file), file);
                 if (Integer(value, "deathSoulLossRate", 0, file) > 10000)
                     throw new InvalidDataException($"서낭당 재화 손실 확률은 10000 이하여야 합니다: {file}");

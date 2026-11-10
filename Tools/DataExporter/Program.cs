@@ -43,9 +43,10 @@ try
         files.AddRange(spawnFiles);
         IReadOnlyList<OutputFile> shrineFiles = new ShrineFileCollector().Collect(root, workspace.Folder("Shrine"), data);
         files.AddRange(shrineFiles);
+        OutputCatalog.ValidateJsonNames(files);
         new CodeGenerator().Generate(data, classes);
         new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
-        string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("LoadPlan"));
+        string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("LoadPlan"), shrineFiles);
         new ClientLoadPlanCompiler().Compile(client, classes, plan);
         files.AddRange(Directory.EnumerateFiles(classes, "*.cs").Select(path => new OutputFile(OutputCatalog.ClassesFolder + "/" + Path.GetFileName(path), path)));
         files.Add(new OutputFile(OutputCatalog.LoadPlanPath, plan));

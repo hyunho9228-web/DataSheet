@@ -41,6 +41,10 @@ internal static class ShrineValidationChecks
         check(File.ReadAllText(target) == previous, "검사 실패 시 기존 배포값 변경");
         ChangeLevel(value => value["deathSoulLossRate"] = 10001);
         fails(() => Collect(), "서낭당 확률 상한 초과 허용");
+        ChangeLevel(value => value["soulCostBase"] = 0);
+        fails(() => Collect(), "서낭당 비용 기본값 0 허용");
+        ChangeLevel(value => value["soulCostRate"] = 9999);
+        fails(() => Collect(), "서낭당 레벨 증가에 따라 감소하는 비용 비율 허용");
         ChangeLevel(value => value["levels"]![0]!["level"] = 2);
         fails(() => Collect(), "서낭당 중복·누락 단계 허용");
         ChangeLevel(value => value["levels"]![0]!["soulCostToNext"] = 1.5);

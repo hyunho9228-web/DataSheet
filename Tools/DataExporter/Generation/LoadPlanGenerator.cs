@@ -5,7 +5,7 @@ namespace DataSheet.Export;
 // 시트의 형식·상속·묶음 규칙으로 초기화 순서를 구성합니다.
 public sealed class LoadPlanGenerator
 {
-    public string Generate(ProjectData data, string folder)
+    public string Generate(ProjectData data, string folder, IReadOnlyList<OutputFile>? shrineFiles = null)
     {
         var code = new StringBuilder("// 시트 규칙에서 자동 생성한 로딩 계획입니다. 직접 수정하지 마세요.\nusing System.Threading;\nusing System.Threading.Tasks;\nusing HumanGhost.Data.Definitions;\nusing HumanGhost.Data.Storage;\n\nnamespace HumanGhost.Data.Infrastructure\n{\n    internal static class GeneratedDataLoadPlan\n    {\n");
         foreach (OutputFormat format in new[] { OutputFormat.Csv, OutputFormat.Json })
@@ -29,6 +29,18 @@ public sealed class LoadPlanGenerator
                     else code.Append($"            await loader.LoadGroupsAsync<{name}>(catalog, token, \"{group}\");\n");
                 }
                 else code.Append($"            await loader.LoadJsonAsync(catalog, \"{name}\", reader.Read<{name}>, row => row.ID, token);\n");
+            }
+            if (format == OutputFormat.Json && shrineFiles is { Count: > 0 })
+            {
+                code.Append("            var shrineReader = new HumanGhost.Data.Mapping.ShrineDefinitionReader();\n");
+                code.Append("            var shrineLevel = await loader.ReadJsonAsync(\"shrine_level\", shrineReader.ReadLevel, token);\n");
+                code.Append("            var shrineStats = new System.Collections.Generic.List<ShrineStatDefinition>();\n");
+                foreach (OutputFile file in shrineFiles.Where(file => file.RelativePath.StartsWith(OutputCatalog.ShrineFolder + "/stat/", StringComparison.Ordinal)))
+                {
+                    string name = Path.GetFileNameWithoutExtension(file.RelativePath);
+                    code.Append($"            shrineStats.Add(await loader.ReadJsonAsync(\"{name}\", shrineReader.ReadStat, token));\n");
+                }
+                code.Append("            catalog.RegisterDefinition(new ShrineDefinitions(shrineLevel, shrineStats));\n");
             }
             code.Append("            await Task.CompletedTask;\n            return catalog;\n        }\n");
         }
