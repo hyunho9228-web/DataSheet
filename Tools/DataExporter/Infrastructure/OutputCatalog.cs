@@ -6,6 +6,14 @@ public static class OutputCatalog
 {
     public static string DataFolder(OutputFormat format) => format == OutputFormat.Csv ? "Assets/Data/Csv" : "Assets/Data/Json";
     public const string SpawnFolder = "Assets/Data/Json/spawn";
+    public const string ShrineFolder = "Assets/Data/Json/shrine";
+    public static bool IsShrinePath(string path)
+    {
+        if (path == ShrineFolder + "/shrine_level.json") return true;
+        const string prefix = ShrineFolder + "/stat/";
+        return path.StartsWith(prefix, StringComparison.Ordinal) && path.EndsWith(".json", StringComparison.Ordinal)
+            && NamePolicy.IsStem(path[prefix.Length..^5]);
+    }
     public static bool IsSpawnPath(string path) => path.StartsWith(SpawnFolder + "/", StringComparison.Ordinal)
         && path.EndsWith(".json", StringComparison.Ordinal)
         && path[(SpawnFolder.Length + 1)..^5] is { Length: > 0 } name
@@ -20,7 +28,7 @@ public static class OutputCatalog
         && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
     public static bool IsOwnedPath(string path)
     {
-        if (IsLoadPlan(path) || IsSpawnPath(path)) return true;
+        if (IsLoadPlan(path) || IsSpawnPath(path) || IsShrinePath(path)) return true;
         string directory = path.Contains('/') ? path[..path.LastIndexOf('/')] : "";
         string extension = Path.GetExtension(path);
         return NamePolicy.IsStem(Path.GetFileNameWithoutExtension(path)) && (directory, extension) is

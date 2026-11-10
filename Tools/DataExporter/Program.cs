@@ -41,6 +41,8 @@ try
         }
         IReadOnlyList<OutputFile> spawnFiles = new SpawnFileCollector().Collect(root, workspace.Folder("Spawn"));
         files.AddRange(spawnFiles);
+        IReadOnlyList<OutputFile> shrineFiles = new ShrineFileCollector().Collect(root, workspace.Folder("Shrine"), data);
+        files.AddRange(shrineFiles);
         new CodeGenerator().Generate(data, classes);
         new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
         string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("LoadPlan"));
@@ -48,7 +50,7 @@ try
         files.AddRange(Directory.EnumerateFiles(classes, "*.cs").Select(path => new OutputFile(OutputCatalog.ClassesFolder + "/" + Path.GetFileName(path), path)));
         files.Add(new OutputFile(OutputCatalog.LoadPlanPath, plan));
         if (deploy) new DeploymentService().Deploy(files, client, workspace);
-        Console.WriteLine($"{(deploy ? "배포" : "검사")} 완료: {data.Tables.Count}개 탭, 데이터 {data.Tables.Count}개, 정의 클래스 {Directory.GetFiles(classes, "*.cs").Length}개, 자동 로딩 계획 1개, 스폰 JSON {spawnFiles.Count}개. 임시 생성 파일을 정리합니다.");
+        Console.WriteLine($"{(deploy ? "배포" : "검사")} 완료: {data.Tables.Count}개 탭, 데이터 {data.Tables.Count}개, 정의 클래스 {Directory.GetFiles(classes, "*.cs").Length}개, 자동 로딩 계획 1개, 스폰 JSON {spawnFiles.Count}개, 서낭당 JSON {shrineFiles.Count}개. 임시 생성 파일을 정리합니다.");
     }
     finally { mutex.ReleaseMutex(); }
     return 0;

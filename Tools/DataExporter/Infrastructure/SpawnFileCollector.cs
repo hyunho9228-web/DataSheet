@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 
 namespace DataSheet.Export;
@@ -7,27 +6,8 @@ namespace DataSheet.Export;
 public sealed class SpawnFileCollector
 {
     public IReadOnlyList<OutputFile> Collect(string root, string snapshotFolder)
-    {
-        string sourceFolder = Path.Combine(root, "spawn");
-        if (!Directory.Exists(sourceFolder)) return [];
-        var files = new List<OutputFile>();
-        foreach (string source in Directory.EnumerateFiles(sourceFolder, "*.json").Order(StringComparer.Ordinal))
-        {
-            string relative = OutputCatalog.SpawnFolder + "/" + Path.GetFileName(source);
-            if (!OutputCatalog.IsSpawnPath(relative)) throw new InvalidDataException($"스폰 파일명은 숫자로 된 스테이지 ID를 사용해 주세요: {source}");
-            string text = File.ReadAllText(source, new UTF8Encoding(false, true));
-            try
-            {
-                using JsonDocument document = JsonDocument.Parse(text);
-                ValidateMaximum(document.RootElement, source);
-            }
-            catch (JsonException error) { throw new InvalidDataException($"스폰 JSON 형식이 잘못됐습니다: {source}", error); }
-            string snapshot = Path.Combine(snapshotFolder, Path.GetFileName(source));
-            File.WriteAllText(snapshot, text, new UTF8Encoding(false));
-            files.Add(new OutputFile(relative, snapshot));
-        }
-        return files;
-    }
+        => new JsonAssetCollector().Collect(Path.Combine(root, "spawn"), OutputCatalog.SpawnFolder,
+            snapshotFolder, OutputCatalog.IsSpawnPath, ValidateMaximum);
 
     private static void ValidateMaximum(JsonElement root, string source)
     {
