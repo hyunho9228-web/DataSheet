@@ -15,11 +15,13 @@ internal static class AutoLoadingChecks
         string classes = workspace.Folder("AutoLoadClasses");
         new CodeGenerator().Generate(data, classes);
         var shrineFiles = new ShrineFileCollector().Collect(Directory.GetCurrentDirectory(), workspace.Folder("AutoShrine"), data);
-        string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("AutoLoadPlan"), shrineFiles);
+        var galimgilFiles = new GalimgilFileCollector().Collect(Directory.GetCurrentDirectory(), workspace.Folder("AutoGalimgil"), data);
+        string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("AutoLoadPlan"), shrineFiles, galimgilFiles);
         string text = File.ReadAllText(plan);
         assert(text.Contains("LoadCsvAsync<NewAlpha>") && text.Contains("LoadCsvAsync<NewBeta>"), "신규 시트의 자동 등록 실패");
         assert(text.Contains("reader.Read<NewJson>"), "신규 구조화 데이터의 자동 등록 실패");
         assert(text.Contains("RegisterDefinition(new ShrineDefinitions"), "서낭당 정의 자동 등록 누락");
+        assert(text.Contains("galimgilReader.Read"), "갈림길 정의 자동 등록 누락");
         foreach (OutputFile file in shrineFiles.Where(file => file.RelativePath.Contains("/stat/")))
             assert(text.Contains($"\"{Path.GetFileNameWithoutExtension(file.RelativePath)}\""), "능력치 JSON의 로딩 계획 반영 누락");
         var generatedNames = shrineFiles.Select(file => Path.GetFileNameWithoutExtension(file.RelativePath)).ToArray();
@@ -41,6 +43,8 @@ internal static class AutoLoadingChecks
         }
         foreach (OutputFile file in shrineFiles)
             File.Copy(file.SourcePath, Path.Combine(root, "Json", Path.GetFileName(file.RelativePath)));
+        foreach (OutputFile file in galimgilFiles)
+            File.Copy(file.SourcePath, Path.Combine(root, "Json", Path.GetFileName(file.RelativePath)));
         var context = new AssemblyLoadContext("자동 로딩 통합 검사", true);
         try
         {
@@ -55,6 +59,9 @@ internal static class AutoLoadingChecks
             Task task = (Task)bootstrapType.GetMethod("InitializeAsync")!.Invoke(bootstrap, [CancellationToken.None])!;
             await task;
             object catalog = task.GetType().GetProperty("Result")!.GetValue(task)!;
+            Type galimgilType = assembly.GetType("HumanGhost.Data.Definitions.GalimgilRewardDefinition")!;
+            object galimgil = catalog.GetType().GetMethod("GetDefinition")!.MakeGenericMethod(galimgilType).Invoke(catalog, null)!;
+            assert((int)galimgilType.GetProperty("SoulPerKill")!.GetValue(galimgil)! == 3, "갈림길 JSON 실제 정의 조회 실패");
             Type shrineType = assembly.GetType("HumanGhost.Data.Definitions.ShrineDefinitions")!;
             object shrine = catalog.GetType().GetMethod("GetDefinition")!.MakeGenericMethod(shrineType).Invoke(catalog, null)!;
             object stats = shrineType.GetProperty("Stats")!.GetValue(shrine)!;

@@ -13,6 +13,7 @@ if (!args.Contains("--deployment-only"))
 {
 ProjectData data = ProjectData.Load(Directory.GetCurrentDirectory());
 ShrineValidationChecks.Run(data, Assert, Fails, workspace);
+GalimgilValidationChecks.Run(data, Assert, Fails, workspace);
 CutsceneValidationChecks.Run(data, Assert, Fails);
 int expectedTables = Directory.EnumerateFiles("tables", "*.xlsx", SearchOption.AllDirectories)
     .Where(path => !Path.GetFileName(path).StartsWith("~$", StringComparison.Ordinal))

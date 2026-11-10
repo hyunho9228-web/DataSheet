@@ -7,6 +7,8 @@ public static class OutputCatalog
     public static string DataFolder(OutputFormat format) => format == OutputFormat.Csv ? "Assets/Data/Csv" : "Assets/Data/Json";
     public const string SpawnFolder = "Assets/Data/Json/spawn";
     public const string ShrineFolder = "Assets/Data/Json/shrine";
+    public const string GalimgilFolder = "Assets/Data/Json/galimgil";
+    public static bool IsGalimgilPath(string path) => path == GalimgilFolder + "/galimgil_reward.json";
     public static bool IsShrinePath(string path)
     {
         if (path == ShrineFolder + "/shrine_level.json") return true;
@@ -38,7 +40,7 @@ public static class OutputCatalog
         && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
     public static bool IsOwnedPath(string path)
     {
-        if (IsLoadPlan(path) || IsSpawnPath(path) || IsShrinePath(path)) return true;
+        if (IsLoadPlan(path) || IsSpawnPath(path) || IsShrinePath(path) || IsGalimgilPath(path)) return true;
         string directory = path.Contains('/') ? path[..path.LastIndexOf('/')] : "";
         string extension = Path.GetExtension(path);
         return NamePolicy.IsStem(Path.GetFileNameWithoutExtension(path)) && (directory, extension) is
