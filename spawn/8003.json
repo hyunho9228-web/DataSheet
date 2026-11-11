@@ -11,7 +11,7 @@
       "Monsters": [
         {
           "MonsterCode": 3001,
-          "MonsterCount": 25,
+          "MonsterCount": 24,
           "Points": [
             [
               1400,
@@ -60,10 +60,6 @@
             [
               5900,
               700
-            ],
-            [
-              6200,
-              0
             ],
             [
               6400,
