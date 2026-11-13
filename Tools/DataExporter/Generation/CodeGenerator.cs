@@ -7,6 +7,7 @@ public sealed class CodeGenerator
     private const string _header = "// 최초 생성 데이터 정의입니다. 기존 파일은 자동 갱신하지 않으므로 시트 구조 변경 시 함께 수정하세요.\nnamespace HumanGhost.Data.Definitions\n{\n";
     public void Generate(ProjectData data, string folder)
     {
+        new EnumGenerator().Generate(data, Path.Combine(folder, "Enums"));
         var baseTables = data.Instructions.Values.Where(value => value.BaseName is not null).ToDictionary(value => value.BaseName!, StringComparer.Ordinal);
         foreach (SheetInstructions value in baseTables.Values)
             Write(value.BaseName!, value.Schema.Columns.Where(column => column.SharedCharacterStat).ToArray(), null, [], true);
@@ -26,7 +27,7 @@ public sealed class CodeGenerator
             }
         }
         if (data.Tables.FirstOrDefault(table => table.Schema.Name == "State") is TypedTable state)
-            Save("StateKey", _header + "    public enum StateKey\n    {\n" + string.Join("\n", state.Rows.Select(row => $"        {row.Cells["Key"].Value} = {row.Cells["ID"].Value},")) + "\n    }\n}\n");
+            Save("StateKey", "// 상태 시트에서 자동 생성합니다. 매 배포 갱신하므로 직접 수정하지 마세요.\nnamespace HumanGhost.Data.Definitions\n{\n    public enum StateKey\n    {\n" + string.Join("\n", state.Rows.Select(row => $"        {row.Cells["Key"].Value} = {row.Cells["ID"].Value},")) + "\n    }\n}\n");
 
         void Save(string name, string code)
         {

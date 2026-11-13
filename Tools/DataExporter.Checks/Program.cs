@@ -17,6 +17,7 @@ GalimgilValidationChecks.Run(data, Assert, Fails, workspace);
 CutsceneValidationChecks.Run(data, Assert, Fails);
 NpcDeploymentChecks.Run(data, Assert, Fails, workspace);
 JsonPipelineChecks.Run(data, Assert, Fails, workspace);
+EnumDeploymentChecks.Run(data, Assert, Fails, workspace);
 int expectedTables = Directory.EnumerateFiles("tables", "*.xlsx", SearchOption.AllDirectories)
     .Where(path => !Path.GetFileName(path).StartsWith("~$", StringComparison.Ordinal))
     .Sum(path => new SheetRuleReader().Read(new ExcelTableReader().Read(path)).Count);

@@ -15,6 +15,11 @@ public static class OutputCatalog
         && path.EndsWith(".json", StringComparison.Ordinal) && path["Assets/Data/Json/".Length..^5].Split('/').All(segment =>
             segment.Length > 0 && segment.All(character => char.IsAsciiLetterOrDigit(character) || character == '_'));
     public const string ClassesFolder = "Assets/3.Script/Data";
+    public const string EnumsFolder = ClassesFolder + "/Generated/Enums";
+    public static bool IsGeneratedCode(string path) => IsLoadPlan(path) || IsGeneratedEnum(path);
+    public static bool IsGeneratedEnum(string path) => string.Equals(path, ClassesFolder + "/StateKey.cs", StringComparison.OrdinalIgnoreCase)
+        || (string.Equals(Path.GetDirectoryName(path)?.Replace('\\', '/'), EnumsFolder, StringComparison.OrdinalIgnoreCase)
+            && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) && NamePolicy.IsStem(Path.GetFileNameWithoutExtension(path)));
     public const string LoadPlanPath = ClassesFolder + "/Generated/GeneratedDataLoadPlan.cs";
     // 클라이언트의 기존 텍스트 입력은 파일 이름을 키로 쓰므로 하위 폴더가 달라도 이름 충돌을 허용하지 않습니다.
     public static void ValidateJsonNames(IEnumerable<OutputFile> files)
@@ -34,7 +39,7 @@ public static class OutputCatalog
         && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
     public static bool IsOwnedPath(string path)
     {
-        if (IsLoadPlan(path) || IsJsonPath(path)) return true;
+        if (IsGeneratedCode(path) || IsJsonPath(path)) return true;
         string directory = path.Contains('/') ? path[..path.LastIndexOf('/')] : "";
         string extension = Path.GetExtension(path);
         return NamePolicy.IsStem(Path.GetFileNameWithoutExtension(path)) && (directory, extension) is

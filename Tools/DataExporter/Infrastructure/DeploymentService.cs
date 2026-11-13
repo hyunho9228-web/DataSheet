@@ -22,10 +22,10 @@ public sealed class DeploymentService
                 if ((File.Exists(part) || Directory.Exists(part)) && File.GetAttributes(part).HasFlag(FileAttributes.ReparsePoint)) throw new IOException("배포 경로에 링크가 있습니다.");
             return path;
         }
-        // 정의 클래스는 보존하고 자동 로딩 계획만 데이터와 함께 갱신합니다.
-        OutputFile[] pending = files.Where(file => !OutputCatalog.IsCode(file.RelativePath) || OutputCatalog.IsLoadPlan(file.RelativePath) || !File.Exists(Target(file.RelativePath))).ToArray();
-        string[] removed = old.Except(current).Where(path => !OutputCatalog.IsCode(path)).ToArray();
-        var retained = current.Union(old.Where(OutputCatalog.IsCode)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        // 정의 클래스는 보존하고 로딩 계획·생성 enum은 데이터와 함께 갱신합니다.
+        OutputFile[] pending = files.Where(file => !OutputCatalog.IsCode(file.RelativePath) || OutputCatalog.IsGeneratedCode(file.RelativePath) || !File.Exists(Target(file.RelativePath))).ToArray();
+        string[] removed = old.Except(current).Where(path => !OutputCatalog.IsCode(path) || OutputCatalog.IsGeneratedEnum(path)).ToArray();
+        var retained = current.Union(old.Where(path => OutputCatalog.IsCode(path) && !OutputCatalog.IsGeneratedEnum(path))).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (string relative in pending.Select(file => file.RelativePath))
             if (File.Exists(Target(relative)) && !old.Contains(relative)) throw new IOException($"생성기 소유 목록에 없는 기존 파일입니다: {relative}");
         string[] affected = pending.Select(file => file.RelativePath).Union(removed).Append(_manifest).ToArray();
@@ -36,7 +36,7 @@ public sealed class DeploymentService
         {
             foreach (OutputFile file in pending)
             {
-                string path = Target(file.RelativePath); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.Copy(file.SourcePath, path, !OutputCatalog.IsCode(file.RelativePath) || OutputCatalog.IsLoadPlan(file.RelativePath));
+                string path = Target(file.RelativePath); Directory.CreateDirectory(Path.GetDirectoryName(path)!); File.Copy(file.SourcePath, path, !OutputCatalog.IsCode(file.RelativePath) || OutputCatalog.IsGeneratedCode(file.RelativePath));
             }
             foreach (string relative in removed) File.Delete(Target(relative));
             File.WriteAllText(manifest, JsonSerializer.Serialize(new { Files = retained.Order(StringComparer.Ordinal).ToArray() }, new JsonSerializerOptions { WriteIndented = true }));

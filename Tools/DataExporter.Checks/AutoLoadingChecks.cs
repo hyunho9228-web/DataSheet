@@ -9,6 +9,8 @@ internal static class AutoLoadingChecks
         string root = workspace.Folder("AutoLoadFixture");
         string tables = Directory.CreateDirectory(Path.Combine(root, "tables")).FullName;
         foreach (string source in Directory.EnumerateFiles("tables", "*.xlsx")) File.Copy(source, Path.Combine(tables, Path.GetFileName(source)));
+        Directory.CreateDirectory(Path.Combine(root, "spawn"));
+        foreach (string source in Directory.EnumerateFiles("spawn", "*.json")) File.Copy(source, Path.Combine(root, "spawn", Path.GetFileName(source)));
         WorkbookFixture.Write(Path.Combine(tables, "AddedWorkbook.xlsx"), ["NewAlpha", "NewBeta"]);
         WorkbookFixture.Write(Path.Combine(tables, "AddedJsonWorkbook.xlsx"), ["NewJson"], true);
         ProjectData data = ProjectData.Load(root);

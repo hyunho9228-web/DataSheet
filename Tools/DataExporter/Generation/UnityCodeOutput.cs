@@ -6,12 +6,15 @@ public class UnityCodeOutput
     public IReadOnlyList<OutputFile> Create(ProjectData data, string client, TemporaryWorkspace workspace,
         IReadOnlyList<OutputFile> jsonFiles)
     {
+        new EnumReferenceValidator().Validate(data, client);
         string definitions = workspace.Folder("UnityDefinitions");
         new CodeGenerator().Generate(data, definitions);
         new GeneratedCodeCompiler().Compile(definitions, workspace.Folder("UnityCompile"));
         string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("UnityLoadPlan"), jsonFiles);
         new ClientLoadPlanCompiler().Compile(client, definitions, plan);
-        return [.. Directory.EnumerateFiles(definitions, "*.cs").Select(path =>
-            new OutputFile(OutputCatalog.ClassesFolder + "/" + Path.GetFileName(path), path)), new(OutputCatalog.LoadPlanPath, plan)];
+        return [.. Directory.EnumerateFiles(definitions, "*.cs", SearchOption.AllDirectories).Select(path =>
+            new OutputFile(Path.GetFileName(Path.GetDirectoryName(path)) == "Enums"
+                ? OutputCatalog.EnumsFolder + "/" + Path.GetFileName(path)
+                : OutputCatalog.ClassesFolder + "/" + Path.GetFileName(path), path)), new(OutputCatalog.LoadPlanPath, plan)];
     }
 }

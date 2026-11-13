@@ -37,6 +37,8 @@ public sealed record ProjectData(IReadOnlyList<TypedTable> Tables, IReadOnlyDict
         if (issues.Count > 0) throw new InvalidDataException(string.Join(Environment.NewLine, issues));
         var data = new ProjectData(result.AsReadOnly(), instructions);
         new CutsceneDataValidator().Validate(data);
+        new EnumDataValidator().Validate(data);
+        new FieldObjectDataValidator().Validate(data, root);
         return data;
     }
 }

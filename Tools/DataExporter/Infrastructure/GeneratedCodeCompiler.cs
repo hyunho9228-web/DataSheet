@@ -7,7 +7,7 @@ namespace DataSheet.Export;
 public sealed class GeneratedCodeCompiler
 {
     public void Compile(string classes, string folder)
-        => CompileSources(Directory.EnumerateFiles(classes, "*.cs"));
+        => CompileSources(Directory.EnumerateFiles(classes, "*.cs", SearchOption.AllDirectories));
 
     public byte[] CompileSources(IEnumerable<string> paths)
     {

@@ -17,9 +17,10 @@ public sealed class ClientLoadPlanCompiler
             sources.Add(Path.Combine(scripts, "Data", "Infrastructure", name + ".cs"));
         // 실제로 보존할 클라이언트 정의를 우선하여 생성 계획과의 호환성도 검사합니다.
         var models = Directory.EnumerateFiles(Path.Combine(scripts, "Data"), "*.cs").ToDictionary(path => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase);
-        foreach (string path in Directory.EnumerateFiles(definitions, "*.cs"))
+        foreach (string path in Directory.EnumerateFiles(definitions, "*.cs", SearchOption.AllDirectories))
         {
             string name = Path.GetFileName(path);
+            if (Path.GetFileName(Path.GetDirectoryName(path)) == "Enums" || name == "StateKey.cs") { models[name] = path; continue; }
             if (models.TryGetValue(name, out string? existing)) ValidateConstructor(path, existing);
             else models.Add(name, path);
         }
