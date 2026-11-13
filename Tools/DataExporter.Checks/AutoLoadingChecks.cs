@@ -14,9 +14,9 @@ internal static class AutoLoadingChecks
         ProjectData data = ProjectData.Load(root);
         string classes = workspace.Folder("AutoLoadClasses");
         new CodeGenerator().Generate(data, classes);
-        var shrineFiles = new ShrineFileCollector().Collect(Directory.GetCurrentDirectory(), workspace.Folder("AutoShrine"), data);
-        var galimgilFiles = new GalimgilFileCollector().Collect(Directory.GetCurrentDirectory(), workspace.Folder("AutoGalimgil"), data);
-        string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("AutoLoadPlan"), shrineFiles, galimgilFiles);
+        var shrineFiles = new ShrineJsonRule().Collect(Directory.GetCurrentDirectory(), workspace.Folder("AutoShrine"), data);
+        var galimgilFiles = new GalimgilJsonRule().Collect(Directory.GetCurrentDirectory(), workspace.Folder("AutoGalimgil"), data);
+        string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("AutoLoadPlan"), shrineFiles.Concat(galimgilFiles).ToArray());
         string text = File.ReadAllText(plan);
         assert(text.Contains("LoadCsvAsync<NewAlpha>") && text.Contains("LoadCsvAsync<NewBeta>"), "신규 시트의 자동 등록 실패");
         assert(text.Contains("reader.Read<NewJson>"), "신규 구조화 데이터의 자동 등록 실패");
@@ -35,6 +35,17 @@ internal static class AutoLoadingChecks
         assert(duplicateFailed, "하위 폴더의 JSON 이름 충돌 감지 누락");
         string client = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "Human_Ghost-"));
         byte[] compiled = new ClientLoadPlanCompiler().Compile(client, classes, plan);
+        string cutscene = Path.Combine(classes, "Cutscene.cs");
+        string originalCutscene = File.ReadAllText(cutscene);
+        bool mismatchDetected = false;
+        try
+        {
+            File.WriteAllText(cutscene, originalCutscene.Replace("string key)", "string key, int missingColumn)"));
+            new ClientLoadPlanCompiler().Compile(client, classes, plan);
+        }
+        catch (InvalidDataException error) when (error.Message.Contains("생성자 컬럼", StringComparison.Ordinal)) { mismatchDetected = true; }
+        finally { File.WriteAllText(cutscene, originalCutscene); }
+        assert(mismatchDetected, "보존된 정의와 시트의 컬럼 불일치를 배포 전에 발견하지 못했습니다.");
         foreach (TypedTable table in data.Tables)
         {
             ITableSerializer serializer = TableSerializers.For(table.Schema.Format);

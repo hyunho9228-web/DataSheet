@@ -8,18 +8,12 @@ public static class OutputCatalog
     public const string SpawnFolder = "Assets/Data/Json/spawn";
     public const string ShrineFolder = "Assets/Data/Json/shrine";
     public const string GalimgilFolder = "Assets/Data/Json/galimgil";
-    public static bool IsGalimgilPath(string path) => path == GalimgilFolder + "/galimgil_reward.json";
-    public static bool IsShrinePath(string path)
-    {
-        if (path == ShrineFolder + "/shrine_level.json") return true;
-        const string prefix = ShrineFolder + "/stat/";
-        return path.StartsWith(prefix, StringComparison.Ordinal) && path.EndsWith(".json", StringComparison.Ordinal)
-            && NamePolicy.IsStem(path[prefix.Length..^5]);
-    }
-    public static bool IsSpawnPath(string path) => path.StartsWith(SpawnFolder + "/", StringComparison.Ordinal)
-        && path.EndsWith(".json", StringComparison.Ordinal)
-        && path[(SpawnFolder.Length + 1)..^5] is { Length: > 0 } name
-        && name.All(character => character is >= '0' and <= '9');
+    public const string DialogueFolder = "Assets/Data/Json/dialogue";
+    public static string JsonAssetPath(string sourceRelative) => "Assets/Data/Json/"
+        + (sourceRelative.StartsWith("stats/", StringComparison.Ordinal) ? sourceRelative[6..] : sourceRelative);
+    public static bool IsJsonPath(string path) => path.StartsWith("Assets/Data/Json/", StringComparison.Ordinal)
+        && path.EndsWith(".json", StringComparison.Ordinal) && path["Assets/Data/Json/".Length..^5].Split('/').All(segment =>
+            segment.Length > 0 && segment.All(character => char.IsAsciiLetterOrDigit(character) || character == '_'));
     public const string ClassesFolder = "Assets/3.Script/Data";
     public const string LoadPlanPath = ClassesFolder + "/Generated/GeneratedDataLoadPlan.cs";
     // 클라이언트의 기존 텍스트 입력은 파일 이름을 키로 쓰므로 하위 폴더가 달라도 이름 충돌을 허용하지 않습니다.
@@ -40,7 +34,7 @@ public static class OutputCatalog
         && path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
     public static bool IsOwnedPath(string path)
     {
-        if (IsLoadPlan(path) || IsSpawnPath(path) || IsShrinePath(path) || IsGalimgilPath(path)) return true;
+        if (IsLoadPlan(path) || IsJsonPath(path)) return true;
         string directory = path.Contains('/') ? path[..path.LastIndexOf('/')] : "";
         string extension = Path.GetExtension(path);
         return NamePolicy.IsStem(Path.GetFileNameWithoutExtension(path)) && (directory, extension) is

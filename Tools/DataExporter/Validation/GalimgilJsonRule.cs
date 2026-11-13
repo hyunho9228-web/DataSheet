@@ -3,14 +3,14 @@ using static DataSheet.Export.JsonAssetFields;
 
 namespace DataSheet.Export;
 
-public sealed class GalimgilFileCollector
+public class GalimgilJsonRule : JsonAssetRule
 {
-    public IReadOnlyList<OutputFile> Collect(string root, string snapshotFolder, ProjectData data)
+    public override string SourceFolder => "stats/galimgil";
+    protected override JsonAssetValidation Prepare(string source, ProjectData data)
     {
-        string source = Path.Combine(root, "stats", "galimgil");
-        if (!Directory.Exists(source)) return [];
+        if (!Directory.Exists(source)) return new((_, _) => { });
         if (!File.Exists(Path.Combine(source, "galimgil_reward.json")))
-            throw new InvalidDataException("갈림길 데이터의 galimgil_reward.json이 없습니다.");
+            throw new InvalidDataException("필수 JSON이 없습니다: " + Path.Combine(source, "galimgil_reward.json"));
         var reference = References(data, "Currency", "Stage");
         void Validate(JsonElement value, string file)
         {
@@ -38,7 +38,11 @@ public sealed class GalimgilFileCollector
             }
             if (names.Count == 0 || previous != 0) throw new InvalidDataException($"갈림길 마지막 등급의 처치 기준은 0이어야 합니다: {file}");
         }
-        return new JsonAssetCollector().Collect(source, OutputCatalog.GalimgilFolder,
-            snapshotFolder, OutputCatalog.IsGalimgilPath, Validate);
+        return new((value, file) =>
+        {
+            if (Path.GetRelativePath(source, file) != "galimgil_reward.json")
+                throw new InvalidDataException("갈림길 JSON 경로를 확인해 주세요: " + file);
+            Validate(value, file);
+        });
     }
 }

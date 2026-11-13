@@ -27,7 +27,7 @@ public static class JsonAssetFields
     }
     public static JsonElement Rows(JsonElement value, string field, string file)
     {
-        if (!value.TryGetProperty(field, out var rows) || rows.ValueKind != JsonValueKind.Array)
+        if (value.ValueKind != JsonValueKind.Object || !value.TryGetProperty(field, out var rows) || rows.ValueKind != JsonValueKind.Array)
             throw new InvalidDataException($"JSON {field}에는 배열이 필요합니다: {file}");
         return rows;
     }

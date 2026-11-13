@@ -4,14 +4,14 @@ using static DataSheet.Export.JsonAssetFields;
 namespace DataSheet.Export;
 
 // 서낭당 고유의 필드·단계·참조 검사만 담당하고 파일 처리와 배포는 기존 공용 경계를 사용합니다.
-public sealed class ShrineFileCollector
+public class ShrineJsonRule : JsonAssetRule
 {
-    public IReadOnlyList<OutputFile> Collect(string root, string snapshotFolder, ProjectData data)
+    public override string SourceFolder => "stats/shrine";
+    protected override JsonAssetValidation Prepare(string source, ProjectData data)
     {
-        string source = Path.Combine(root, "stats", "shrine");
-        if (!Directory.Exists(source)) return [];
+        if (!Directory.Exists(source)) return new((_, _) => { });
         if (!File.Exists(Path.Combine(source, "shrine_level.json")))
-            throw new InvalidDataException("서낭당 데이터의 shrine_level.json이 없습니다.");
+            throw new InvalidDataException("필수 JSON이 없습니다: " + Path.Combine(source, "shrine_level.json"));
         var reference = References(data, "Currency", "Language");
         void Validate(JsonElement value, string file)
         {
@@ -42,8 +42,14 @@ public sealed class ShrineFileCollector
                 Steps(value, "steps", "step", maximum, file, (row, _) => Integer(row, "value", int.MinValue, file));
             }
         }
-        return new JsonAssetCollector().Collect(source, OutputCatalog.ShrineFolder,
-            snapshotFolder, OutputCatalog.IsShrinePath, Validate);
+        return new((value, file) =>
+        {
+            string name = Path.GetRelativePath(source, file).Replace('\\', '/');
+            if (name != "shrine_level.json" && !(name.StartsWith("stat/", StringComparison.Ordinal)
+                && name.EndsWith(".json", StringComparison.Ordinal) && NamePolicy.IsStem(name[5..^5])))
+                throw new InvalidDataException("서낭당 JSON 경로를 확인해 주세요: " + file);
+            Validate(value, file);
+        });
     }
 
     private static void Steps(JsonElement value, string field, string key, int maximum, string file, Action<JsonElement, int> validate)

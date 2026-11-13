@@ -5,9 +5,10 @@ namespace DataSheet.Export;
 // 시트의 형식·상속·묶음 규칙으로 초기화 순서를 구성합니다.
 public sealed class LoadPlanGenerator
 {
-    public string Generate(ProjectData data, string folder, IReadOnlyList<OutputFile>? shrineFiles = null,
-        IReadOnlyList<OutputFile>? galimgilFiles = null)
+    public string Generate(ProjectData data, string folder, IReadOnlyList<OutputFile>? jsonFiles = null)
     {
+        OutputFile[] shrineFiles = jsonFiles?.Where(file => file.RelativePath.StartsWith(OutputCatalog.ShrineFolder + "/", StringComparison.Ordinal)).ToArray() ?? [];
+        OutputFile[] galimgilFiles = jsonFiles?.Where(file => file.RelativePath.StartsWith(OutputCatalog.GalimgilFolder + "/", StringComparison.Ordinal)).ToArray() ?? [];
         var code = new StringBuilder("// 시트 규칙에서 자동 생성한 로딩 계획입니다. 직접 수정하지 마세요.\nusing System.Threading;\nusing System.Threading.Tasks;\nusing HumanGhost.Data.Definitions;\nusing HumanGhost.Data.Storage;\n\nnamespace HumanGhost.Data.Infrastructure\n{\n    internal static class GeneratedDataLoadPlan\n    {\n");
         foreach (OutputFormat format in new[] { OutputFormat.Csv, OutputFormat.Json })
         {
@@ -31,7 +32,7 @@ public sealed class LoadPlanGenerator
                 }
                 else code.Append($"            await loader.LoadJsonAsync(catalog, \"{name}\", reader.Read<{name}>, row => row.ID, token);\n");
             }
-            if (format == OutputFormat.Json && shrineFiles is { Count: > 0 })
+            if (format == OutputFormat.Json && shrineFiles.Length > 0)
             {
                 code.Append("            var shrineReader = new HumanGhost.Data.Mapping.ShrineDefinitionReader();\n");
                 code.Append("            var shrineLevel = await loader.ReadJsonAsync(\"shrine_level\", shrineReader.ReadLevel, token);\n");
@@ -43,7 +44,7 @@ public sealed class LoadPlanGenerator
                 }
                 code.Append("            catalog.RegisterDefinition(new ShrineDefinitions(shrineLevel, shrineStats));\n");
             }
-            if (format == OutputFormat.Json && galimgilFiles is { Count: > 0 })
+            if (format == OutputFormat.Json && galimgilFiles.Length > 0)
                 code.Append("            var galimgilReader = new HumanGhost.Data.Mapping.GalimgilDefinitionReader();\n            catalog.RegisterDefinition(await loader.ReadJsonAsync(\"galimgil_reward\", galimgilReader.Read, token));\n");
             code.Append("            await Task.CompletedTask;\n            return catalog;\n        }\n");
         }

@@ -30,7 +30,7 @@ try
         ProjectData data = ProjectData.Load(root);
         string client = Path.GetFullPath(Path.Combine(root, "..", "Human_Ghost-"));
         new HealthDisplayPrefabValidator().Validate(data, client);
-        string classes = workspace.Folder("Classes"), outputs = workspace.Folder("Data");
+        string outputs = workspace.Folder("Data");
         var files = new List<OutputFile>();
         foreach (TypedTable table in data.Tables)
         {
@@ -39,21 +39,14 @@ try
             serializer.Write(table, path); TableSerializers.Verify(table, path);
             files.Add(new(OutputCatalog.DataFolder(table.Schema.Format) + "/" + Path.GetFileName(path), path));
         }
-        IReadOnlyList<OutputFile> spawnFiles = new SpawnFileCollector().Collect(root, workspace.Folder("Spawn"));
-        files.AddRange(spawnFiles);
-        IReadOnlyList<OutputFile> shrineFiles = new ShrineFileCollector().Collect(root, workspace.Folder("Shrine"), data);
-        files.AddRange(shrineFiles);
-        IReadOnlyList<OutputFile> galimgilFiles = new GalimgilFileCollector().Collect(root, workspace.Folder("Galimgil"), data);
-        files.AddRange(galimgilFiles);
+        IReadOnlyList<OutputFile> jsonFiles = new JsonAssetPipeline().Collect(root, workspace.Folder("JsonAssets"), data);
+        files.AddRange(jsonFiles);
         OutputCatalog.ValidateJsonNames(files);
-        new CodeGenerator().Generate(data, classes);
-        new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
-        string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("LoadPlan"), shrineFiles, galimgilFiles);
-        new ClientLoadPlanCompiler().Compile(client, classes, plan);
-        files.AddRange(Directory.EnumerateFiles(classes, "*.cs").Select(path => new OutputFile(OutputCatalog.ClassesFolder + "/" + Path.GetFileName(path), path)));
-        files.Add(new OutputFile(OutputCatalog.LoadPlanPath, plan));
+        files.AddRange(new UnityCodeOutput().Create(data, client, workspace, jsonFiles));
         if (deploy) new DeploymentService().Deploy(files, client, workspace);
-        Console.WriteLine($"{(deploy ? "배포" : "검사")} 완료: {data.Tables.Count}개 탭, 데이터 {data.Tables.Count}개, 정의 클래스 {Directory.GetFiles(classes, "*.cs").Length}개, 자동 로딩 계획 1개, 스폰 JSON {spawnFiles.Count}개, 서낭당 JSON {shrineFiles.Count}개, 갈림길 JSON {galimgilFiles.Count}개. 임시 생성 파일을 정리합니다.");
+        string jsonSummary = string.Join(", ", jsonFiles.GroupBy(file => Path.GetDirectoryName(file.RelativePath)!.Replace('\\', '/'))
+            .Select(group => $"{group.Key}: {group.Count()}개"));
+        Console.WriteLine($"{(deploy ? "배포" : "검사")} 완료: {data.Tables.Count}개 탭, JSON 원본 {jsonFiles.Count}개 ({jsonSummary}). Unity 호환 코드 검사를 통과했습니다. 임시 생성 파일을 정리합니다.");
     }
     finally { mutex.ReleaseMutex(); }
     return 0;

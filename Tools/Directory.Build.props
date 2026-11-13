@@ -1,5 +1,7 @@
 <Project>
   <PropertyGroup>
+    <!-- 도구 내부는 최신 안정 문법을 사용하고 생성 결과는 별도의 Unity 문법 검사로 제한합니다. -->
+    <LangVersion>latest</LangVersion>
     <DataSheetBuildRoot Condition="'$(DataSheetBuildRoot)' == ''">$(TEMP)\HumanGhostDataTools\Build</DataSheetBuildRoot>
     <BaseIntermediateOutputPath>$(DataSheetBuildRoot)\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
     <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>

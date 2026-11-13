@@ -16,7 +16,7 @@ internal static class CutsceneValidationChecks
         };
         validator.Validate(data);
         assert(true, "빈 컷씬 탭은 데이터 입력 대기 상태로 허용");
-        ProjectData sequence = SetRows(data, "Cutscene", [18001, "Intro", 2000]);
+        ProjectData sequence = SetRows(data, "Cutscene", [18001, "Intro"]);
         fails(() => validator.Validate(sequence), "구간 없는 컷씬 거부");
         ProjectData Video(int duration = 0, bool advance = false, int order = 1, string address = "Cutscene/Intro/Main") =>
             SetRows(sequence, "CutsceneStep", [19001, 18001, order, "Video", address, duration, null, advance]);

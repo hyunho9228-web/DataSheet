@@ -11,7 +11,7 @@ internal static class GalimgilValidationChecks
         string source = Path.Combine(folder, "galimgil_reward.json");
         string original = File.ReadAllText("stats/galimgil/galimgil_reward.json");
         File.WriteAllText(source, original, new UTF8Encoding(false));
-        var collector = new GalimgilFileCollector();
+        var collector = new GalimgilJsonRule();
         IReadOnlyList<OutputFile> Collect() => collector.Collect(root, workspace.Folder("GalimgilSnapshot"), data);
         var files = Collect();
         check(files.Count == 1 && OutputCatalog.IsOwnedPath(files[0].RelativePath), "갈림길 수집·배포 소유 경로");

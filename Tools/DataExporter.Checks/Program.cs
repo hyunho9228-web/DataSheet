@@ -15,6 +15,8 @@ ProjectData data = ProjectData.Load(Directory.GetCurrentDirectory());
 ShrineValidationChecks.Run(data, Assert, Fails, workspace);
 GalimgilValidationChecks.Run(data, Assert, Fails, workspace);
 CutsceneValidationChecks.Run(data, Assert, Fails);
+NpcDeploymentChecks.Run(data, Assert, Fails, workspace);
+JsonPipelineChecks.Run(data, Assert, Fails, workspace);
 int expectedTables = Directory.EnumerateFiles("tables", "*.xlsx", SearchOption.AllDirectories)
     .Where(path => !Path.GetFileName(path).StartsWith("~$", StringComparison.Ordinal))
     .Sum(path => new SheetRuleReader().Read(new ExcelTableReader().Read(path)).Count);
@@ -35,6 +37,9 @@ new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
 string invalidClasses = workspace.Folder("InvalidClasses");
 File.WriteAllText(Path.Combine(invalidClasses, "Invalid.cs"), "public sealed class Invalid { public MissingType Value { get; } }");
 Fails(() => new GeneratedCodeCompiler().Compile(invalidClasses, workspace.Folder("InvalidCompile")), "내장 C# 검사기의 잘못된 타입 감지 실패");
+// 도구 내부에서는 아래 최신 문법을 사용할 수 있어도 Unity 배포 결과에는 허용하지 않습니다.
+File.WriteAllText(Path.Combine(invalidClasses, "Invalid.cs"), "namespace ToolOnly; public class Modern { public int[] Values => [1, 2]; }");
+Fails(() => new GeneratedCodeCompiler().Compile(invalidClasses, workspace.Folder("ModernCompile")), "최신 전용 문법이 Unity 생성 코드 검사에 통과했습니다.");
 Assert(data.Tables.All(table => File.Exists(Path.Combine(classes, table.Schema.Name + ".cs"))), "테이블 정의 클래스 생성 누락");
 var prefabValidator = new HealthDisplayPrefabValidator();
 prefabValidator.Validate(data, Path.GetFullPath("../Human_Ghost-"));
@@ -113,7 +118,7 @@ string spawnRoot = workspace.Folder("SpawnSource");
 string spawnFolder = Directory.CreateDirectory(Path.Combine(spawnRoot, "spawn")).FullName;
 string spawnSource = Path.Combine(spawnFolder, "8002.json");
 File.WriteAllText(spawnSource, "{\"FormatVersion\":2,\"MaxMonsterCount\":30}");
-var collector = new SpawnFileCollector();
+var collector = new SpawnJsonRule();
 var spawnFiles = collector.Collect(spawnRoot, workspace.Folder("SpawnSnapshot"));
 deployment.Deploy(spawnFiles, client, workspace);
 string spawnTarget = Path.Combine(client, OutputCatalog.SpawnFolder, "8002.json");

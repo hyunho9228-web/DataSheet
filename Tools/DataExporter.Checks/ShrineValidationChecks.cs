@@ -10,7 +10,7 @@ internal static class ShrineValidationChecks
         Directory.CreateDirectory(Path.Combine(folder, "stat"));
         foreach (string file in Directory.EnumerateFiles("stats/shrine", "*.json", SearchOption.AllDirectories))
             File.Copy(file, Path.Combine(folder, Path.GetRelativePath("stats/shrine", file)));
-        var collector = new ShrineFileCollector();
+        var collector = new ShrineJsonRule();
         IReadOnlyList<OutputFile> Collect() => collector.Collect(root, workspace.Folder("ShrineSnapshot"), data);
         var files = Collect();
         check(files.Count == Directory.EnumerateFiles(folder, "*.json", SearchOption.AllDirectories).Count(), "서낭당 전체 파일 수집 누락");

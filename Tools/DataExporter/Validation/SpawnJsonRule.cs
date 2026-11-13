@@ -3,11 +3,18 @@ using System.Text.Json;
 namespace DataSheet.Export;
 
 // 별도로 작성한 스폰 원본을 검사한 뒤 기존 배포 목록에 추가합니다.
-public sealed class SpawnFileCollector
+public class SpawnJsonRule : JsonAssetRule
 {
-    public IReadOnlyList<OutputFile> Collect(string root, string snapshotFolder)
-        => new JsonAssetCollector().Collect(Path.Combine(root, "spawn"), OutputCatalog.SpawnFolder,
-            snapshotFolder, OutputCatalog.IsSpawnPath, ValidateMaximum);
+    public override string SourceFolder => "spawn";
+    protected override JsonAssetValidation Prepare(string sourceFolder, ProjectData data) => new((value, source) =>
+    {
+        string name = Path.GetRelativePath(sourceFolder, source);
+        if (!name.EndsWith(".json", StringComparison.Ordinal) || name[..^5].Length == 0
+            || !name[..^5].All(char.IsAsciiDigit))
+            throw new InvalidDataException("스폰 파일명은 숫자와 .json으로 작성해 주세요: " + source);
+        ValidateMaximum(value, source);
+        new SpawnObjectValidator().Validate(value, source, data);
+    });
 
     private static void ValidateMaximum(JsonElement root, string source)
     {
