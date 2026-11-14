@@ -33,6 +33,17 @@ var duplicate = units with { Rows = units.Rows.Append(units.Rows[0]).ToArray() }
 Assert(new DataValidator().Validate(data.Tables.Select(table => table == units ? duplicate : table).ToArray()).Any(issue => issue.Code == "DUPLICATE_ID"), "중복 ID 검사 누락");
 TypedRow badRow = units.Rows[0] with { Cells = units.Rows[0].Cells.ToDictionary(pair => pair.Key, pair => pair.Key == "Dodge" ? pair.Value with { Value = 10001 } : pair.Value) };
 Assert(new DataValidator().Validate(data.Tables.Select(table => table == units ? units with { Rows = new[] { badRow }.Concat(units.Rows.Skip(1)).ToArray() } : table).ToArray()).Any(issue => issue.Column == "Dodge"), "확률 범위 검사 누락");
+TypedTable exits = data.Tables.Single(table => table.Schema.Name == "StageExit");
+TypedRow routed = exits.Rows.First(row => row.Cells["RouteID"].Value is int route && route > 0);
+TypedRow sameRoute = routed with { Cells = routed.Cells.ToDictionary(pair => pair.Key, pair => pair.Key == "ID" ? pair.Value with { Value = 99999 } : pair.Value) };
+Fails(() => new StageExitDataValidator().Validate(data with { Tables = data.Tables.Select(table => table == exits ? exits with { Rows = exits.Rows.Append(sameRoute).ToArray() } : table).ToArray() }), "같은 갈림길의 경로 번호 중복 검사 실패");
+TypedRow finish = exits.Rows.First(row => (string?)row.Cells["ExitAction"].Value == "FinishDemo");
+TypedRow finishWithTarget = finish with { Cells = finish.Cells.ToDictionary(pair => pair.Key, pair => pair.Key == "TargetStageID" ? pair.Value with { Value = 8001 } : pair.Value) };
+Fails(() => new StageExitDataValidator().Validate(data with { Tables = data.Tables.Select(table => table == exits ? exits with { Rows = exits.Rows.Where(row => row != finish).Append(finishWithTarget).ToArray() } : table).ToArray() }), "시연 마무리 출구의 목적지 검사 실패");
+TypedRow travel = exits.Rows.First(row => (string?)row.Cells["ExitAction"].Value == "Travel");
+TypedRow travelWithoutArrival = travel with { Cells = travel.Cells.ToDictionary(pair => pair.Key, pair => pair.Key == "ArrivalAnchorName" ? pair.Value with { Value = null } : pair.Value) };
+Fails(() => new StageExitDataValidator().Validate(data with { Tables = data.Tables.Select(table => table == exits ? exits with { Rows = exits.Rows.Where(row => row != travel).Append(travelWithoutArrival).ToArray() } : table).ToArray() }), "이동 출구의 도착 앵커 검사 실패");
+new StageExitDataValidator().Validate(data);
 string classes = workspace.Folder("Classes"); new CodeGenerator().Generate(data, classes);
 new GeneratedCodeCompiler().Compile(classes, workspace.Folder("Compile"));
 string invalidClasses = workspace.Folder("InvalidClasses");
