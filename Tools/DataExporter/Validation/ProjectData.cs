@@ -39,6 +39,7 @@ public sealed record ProjectData(IReadOnlyList<TypedTable> Tables, IReadOnlyDict
         new CutsceneDataValidator().Validate(data);
         new EnumDataValidator().Validate(data);
         new FieldObjectDataValidator().Validate(data, root);
+        new StageExitDataValidator().Validate(data);
         return data;
     }
 }
