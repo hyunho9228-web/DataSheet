@@ -54,6 +54,22 @@ internal static class NpcDeploymentChecks
             fails(() => speeches.Collect(root, snapshot, triggered), "없는 보스 대화 발생 대상을 허용했습니다.");
         }
 
+        // 명부 조사 대화: Stage 참조·Stage별 단일 행·Stage 클리어로 해금되는 Skill 하나를 배포 전에 검사합니다.
+        const string ledger = DialogueJsonRule.LedgerTrigger;
+        int stage = (int)data.Tables.Single(table => table.Schema.Name == "Stage").Rows[0].Cells["ID"].Value!;
+        TypedTable Skill(string type, int condition) => Table("Skill", ("ID", 7001), ("UnlockType", type), ("UnlockConditionType", condition),
+            ("UnlockTargetID", stage), ("UnlockRequiredValue", 1));
+        TypedTable ledgerTalk = Table("Dialogue", ("ID", dialogueId), ("LineFile", "24001.json"), ("TriggerType", ledger), ("TriggerTargetID", stage));
+        TypedTable ledgerSkill = Skill(DialogueJsonRule.LedgerSkillUnlockType, 1);
+        check(speeches.Collect(root, snapshot, With(npc, ledgerTalk, ledgerSkill)).Count == 1, "유효한 명부 조사 대화를 거부했습니다.");
+        fails(() => speeches.Collect(root, snapshot, With(npc, Table("Dialogue", ("ID", dialogueId), ("LineFile", "24001.json"), ("TriggerType", ledger),
+            ("TriggerTargetID", int.MaxValue)), ledgerSkill)), "없는 Stage의 명부 조사 대화를 허용했습니다.");
+        fails(() => speeches.Collect(root, snapshot, With(npc, ledgerTalk, Skill("NONE", 1))), "해금 Skill 없는 명부 조사 대화를 허용했습니다.");
+        fails(() => speeches.Collect(root, snapshot, With(npc, ledgerTalk, Skill(DialogueJsonRule.LedgerSkillUnlockType, 0))),
+            "Stage 클리어 조건이 아닌 명부 해금 Skill을 허용했습니다.");
+        TypedTable twice = Rows(ledgerTalk, Table("Dialogue", ("ID", dialogueId + 1), ("LineFile", "24002.json"), ("TriggerType", ledger), ("TriggerTargetID", stage)));
+        fails(() => speeches.Collect(root, snapshot, With(npc, twice, ledgerSkill)), "같은 Stage의 명부 조사 대화 중복을 허용했습니다.");
+
         string spawnFolder = Directory.CreateDirectory(Path.Combine(root, "spawn")).FullName;
         string spawn = Path.Combine(spawnFolder, "8001.json");
         string layout = new JsonObject { ["MaxMonsterCount"] = 0, ["Placements"] = new JsonArray(
@@ -94,6 +110,11 @@ internal static class NpcDeploymentChecks
         File.WriteAllText(target + ".meta", "보존"); deploy.Deploy([], client, workspace);
         check(!File.Exists(target) && File.Exists(target + ".meta"), "대사 삭제 반영과 메타 보존에 실패했습니다.");
     }
+
+    // 같은 스키마의 한 행 표를 여러 행 표로 합칩니다.
+    private static TypedTable Rows(TypedTable first, params TypedTable[] others)
+        => new(first.Source, first.Schema, first.Rows.Concat(others.SelectMany(table => table.Rows)
+            .Select((row, i) => new TypedRow(8 + i, row.Cells))).ToArray());
 
     private static TypedTable Table(string name, params (string Name, object Value)[] fields)
     {

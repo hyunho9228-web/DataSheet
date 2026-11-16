@@ -1,5 +1,7 @@
 # DataSheet
 
+2026-11-16 명부 조사 대화: `Npc.xlsx` Dialogue 탭 TriggerType에 `LEDGER_INVESTIGATE`(TriggerTargetID = 명부가 있는 Stage ID)를 추가하고 24005를 Stage 8005로 연결했습니다. 검사 도구가 Stage 참조·Stage별 단일 행·`ROOM_LEDGER` 해금 Skill(조건 1) 하나를 배포 전에 확인합니다. DeployData.exe를 재생성했습니다. [기획자 작성·확인 안내](../Human_Ghost-/Docs/기획자용%20안내문서/명부%20조사%20대화%20작성과%20확인%20안내.md) · [개발자 설계](../Human_Ghost-/Docs/개발자용%20설계문서/명부%20대화와%20조사%20완료%20연결%20설계.md)
+
 2026-11-13 UI_Lang 데이터 입력: `UI_Lang` 탭에 연결 행 120개(51001~52117)를 넣었습니다. 번호는 51001부터 화면마다 100 단위로 끊습니다(타이틀·일시정지·옵션·조작 안내·조작 선택·공용·HUD·서낭당·저장·상호작용·안내와 엔딩·오류). Language에 30353~30360(서낭당 메뉴 문구 5개, 결박 관문 안내, 언어 이름 2개)을 추가했습니다. 클라이언트 UI 소비 연결은 아직 없습니다.
 
 2026-11-13 UI 문구 관리: `tables/Language.xlsx`에 빈 `UI_Lang` 탭을 추가했습니다. ID·Key·TextID를 추출하고 Name·Note는 제외하며 TextID의 Language 참조와 Key 중복을 검사합니다. [기획자 시트 작성 안내](Docs/UI_Lang%20시트%20작성%20안내.md)를 따릅니다. 현재 35개 탭의 검사 전용 실행만 통과했으며 클라이언트 배포·UI 소비 연결은 하지 않았습니다. 아래 기존 공급 수치는 당시 배포 기준입니다.
