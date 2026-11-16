@@ -12,6 +12,7 @@ void Fails(Action action, string message)
 if (!args.Contains("--deployment-only"))
 {
 ProjectData data = ProjectData.Load(Directory.GetCurrentDirectory());
+MonsterAggroValidationChecks.Run(data, Assert);
 ShrineValidationChecks.Run(data, Assert, Fails, workspace);
 GalimgilValidationChecks.Run(data, Assert, Fails, workspace);
 CutsceneValidationChecks.Run(data, Assert, Fails);
