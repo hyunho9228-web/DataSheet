@@ -1,5 +1,5 @@
 ﻿[CmdletBinding()]
-param()
+param([switch]$SourceOnly)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $temporaryRoot = [IO.Path]::GetFullPath((Join-Path ([IO.Path]::GetTempPath()) 'HumanGhostDataTools\PublishRuns'))
@@ -14,12 +14,14 @@ try {
     $executable = Join-Path $publishRoot 'DeployData.exe'
     Push-Location -LiteralPath $projectRoot
     try {
-        & $executable --check
+        $checkArgument = if ($SourceOnly) { '--check-source' } else { '--check' }
+        & $executable $checkArgument
         if ($LASTEXITCODE -ne 0) { throw '새 실행파일의 데이터 검사에 실패했습니다. 기존 EXE를 유지합니다.' }
     }
     finally { Pop-Location }
     Copy-Item -LiteralPath $executable -Destination (Join-Path $projectRoot 'DeployData.exe') -Force
     Write-Host '배포 실행파일 생성·검사가 완료되었습니다. 소스를 변경하면 실행파일도 함께 버전 관리에 반영하세요.'
+    if ($SourceOnly) { Write-Host '원본 전용 검사로 도구만 갱신했습니다. 실제 배포는 클라이언트 정의를 맞춘 뒤 --check 통과가 필요합니다.' }
     $exitCode = 0
 }
 catch { Write-Host $_.Exception.Message -ForegroundColor Red }

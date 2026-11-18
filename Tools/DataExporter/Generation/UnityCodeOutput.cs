@@ -4,14 +4,14 @@ namespace DataSheet.Export;
 public class UnityCodeOutput
 {
     public IReadOnlyList<OutputFile> Create(ProjectData data, string client, TemporaryWorkspace workspace,
-        IReadOnlyList<OutputFile> jsonFiles)
+        IReadOnlyList<OutputFile> jsonFiles, bool preserveDefinitions = true)
     {
         new EnumReferenceValidator().Validate(data, client);
         string definitions = workspace.Folder("UnityDefinitions");
         new CodeGenerator().Generate(data, definitions);
         new GeneratedCodeCompiler().Compile(definitions, workspace.Folder("UnityCompile"));
         string plan = new LoadPlanGenerator().Generate(data, workspace.Folder("UnityLoadPlan"), jsonFiles);
-        new ClientLoadPlanCompiler().Compile(client, definitions, plan);
+        new ClientLoadPlanCompiler().Compile(client, definitions, plan, preserveDefinitions);
         return [.. Directory.EnumerateFiles(definitions, "*.cs", SearchOption.AllDirectories).Select(path =>
             new OutputFile(Path.GetFileName(Path.GetDirectoryName(path)) == "Enums"
                 ? OutputCatalog.EnumsFolder + "/" + Path.GetFileName(path)

@@ -49,8 +49,21 @@ public sealed class DataValidator
     public IEnumerable<DataIssue> Validate(IReadOnlyList<TypedTable> sources)
     {
         var tables = sources.ToDictionary(table => table.Schema.Name, StringComparer.Ordinal);
+        // enum 값은 원본에서 한 번 구성합니다. 새 항목 추가 때 허용 숫자 목록을 코드·시트에 중복하지 않습니다.
+        var enumValues = tables.TryGetValue("EnumDefinition", out var definitions)
+            ? definitions.Rows.GroupBy(row => (string)row.Cells["EnumName"].Value!, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.Select(row => (int)row.Cells["Value"].Value!).ToHashSet(), StringComparer.Ordinal)
+            : new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
         foreach (TypedTable table in sources)
         {
+            foreach (ColumnSchema field in table.Schema.Columns)
+                if (field.EnumName is string enumName)
+                {
+                    if (field.Type != FieldType.Integer)
+                        throw new InvalidDataException($"{table.Schema.Name}.{field.Name}: EnumName은 정수 컬럼에만 사용할 수 있습니다.");
+                    if (!enumValues.ContainsKey(enumName))
+                        throw new InvalidDataException($"{table.Schema.Name}.{field.Name}: EnumDefinition에 없는 열거형입니다: {enumName}");
+                }
             foreach (TypedRow row in table.Rows)
                 foreach (TypedCell cell in row.Cells.Values)
                 {
@@ -64,6 +77,8 @@ public sealed class DataValidator
                         _ => null
                     };
                     if (field.AllowedValues is { } allowed && !allowed.Contains(CellValueConverter.Format(cell.Value), StringComparer.Ordinal)) error = "허용 값 목록에 없습니다.";
+                    if (field.EnumName is string enumName && cell.Value is int enumValue && !enumValues[enumName].Contains(enumValue))
+                        error = $"{enumName}에 등록되지 않은 열거형 값입니다.";
                     if (field.SharedStatKeysFrom is string statSource && !tables[statSource].Schema.Columns.Any(column => column.SharedCharacterStat && column.Name == (string)cell.Value)) error = "공통 스탯 키가 아닙니다.";
                     if (field.ReferenceTable is string target && !(field.ZeroMeansNone && cell.Value is int zero && zero == 0)
                         && !tables[target].Rows.Any(other => Equals(other.Cells["ID"].Value, cell.Value))) error = "참조 ID가 없습니다.";

@@ -4,7 +4,7 @@ public enum FieldType { Integer, Text, Flag }
 public sealed record ColumnSchema(string Name, FieldType Type, bool Optional = false,
     int? Minimum = null, int? Maximum = null, string Unit = "", IReadOnlyList<string>? AllowedValues = null,
     string? ReferenceTable = null, bool ZeroMeansNone = false, bool AllowKorean = false,
-    bool SharedCharacterStat = false, string? SharedStatKeysFrom = null);
+    bool SharedCharacterStat = false, string? SharedStatKeysFrom = null, string? EnumName = null);
 public sealed record TableSchema(string Name, OutputFormat Format, IReadOnlyList<ColumnSchema> Columns,
     IReadOnlyList<ITableRule> Rules, string? JsonGroupColumn = null);
 public sealed record DataIssue(string Code, SourceLocation Source, string Column, string Message)

@@ -10,6 +10,7 @@ public sealed class TableRule : ITableRule
     private readonly string _kind, _code;
     private readonly string[] _columns;
     private readonly string? _other, _value, _target, _targetColumn;
+    private readonly bool _optional;
     public TableRule(RuleValues values)
     {
         _kind = values.Required("Kind");
@@ -19,11 +20,26 @@ public sealed class TableRule : ITableRule
             "Unique" => values.Required("Columns").Split('|'),
             "LessOrEqual" => [values.Required("MinimumColumn"), values.Required("MaximumColumn")],
             "ConditionalValue" => [values.Required("WhenColumn"), values.Required("Column")],
+            "ConditionalReference" => [values.Required("WhenColumn"), values.Required("Column")],
             "ReferenceValue" or "Identifier" => [values.Required("Column")],
             _ => throw new InvalidDataException($"지원하지 않는 검사: {_kind}")
         };
-        if (_kind == "ConditionalValue") { _other = values.Required("WhenValue"); _value = values.Required("Value"); }
+        if (_kind == "ConditionalValue")
+        {
+            _other = values.Required("WhenValue");
+            _value = values.Get("Value") ?? throw new InvalidDataException("조건 값 검사에는 Value가 필요합니다. 빈칸은 Value=로 지정합니다.");
+        }
         if (_kind == "ReferenceValue") { _target = values.Required("Table"); _targetColumn = values.Required("TargetColumn"); _value = values.Required("Value"); }
+        if (_kind == "ConditionalReference")
+        {
+            _other = values.Required("WhenValue");
+            _target = values.Required("Table");
+            _optional = values.Flag("Optional");
+            _targetColumn = values.Get("TargetColumn");
+            _value = values.Get("Value");
+            if ((_targetColumn is null) != (_value is null))
+                throw new InvalidDataException("조건 참조의 TargetColumn과 Value는 함께 지정해야 합니다.");
+        }
         values.RequireConsumed();
     }
     public IEnumerable<DataIssue> Validate(TypedTable table, IReadOnlyDictionary<string, TypedTable> tables)
@@ -31,6 +47,16 @@ public sealed class TableRule : ITableRule
         foreach (string column in _columns)
             if (!table.Schema.Columns.Any(field => field.Name == column)) throw new InvalidDataException($"{table.Schema.Name}: 검사 컬럼 없음 {column}");
         var seen = new HashSet<string>(StringComparer.Ordinal);
+        HashSet<int>? references = null;
+        if (_kind == "ConditionalReference")
+        {
+            if (!tables.TryGetValue(_target!, out var target))
+                throw new InvalidDataException($"{table.Schema.Name}: 조건 참조 테이블이 없습니다: {_target}");
+            if (_targetColumn is not null && !target.Schema.Columns.Any(field => field.Name == _targetColumn))
+                throw new InvalidDataException($"{_target}: 조건 참조 대상 컬럼이 없습니다: {_targetColumn}");
+            references = target.Rows.Where(row => _targetColumn is null || CellValueConverter.Format(row.Cells[_targetColumn].Value) == _value)
+                .Select(row => (int)row.Cells["ID"].Value!).ToHashSet();
+        }
         foreach (TypedRow row in table.Rows)
         {
             TypedCell cell = row.Cells[_columns[0]];
@@ -42,6 +68,12 @@ public sealed class TableRule : ITableRule
                 "Identifier" => value is string key && NamePolicy.IsStem(key) && key != "value__",
                 "LessOrEqual" => value is int minimum && row.Cells[_columns[1]].Value is int maximum && minimum <= maximum,
                 "ConditionalValue" => text != _other || CellValueConverter.Format(row.Cells[_columns[1]].Value) == _value,
+                "ConditionalReference" => text != _other || (row.Cells[_columns[1]].Value switch
+                {
+                    null => _optional,
+                    int id => id > 0 && references!.Contains(id),
+                    _ => false
+                }),
                 "ReferenceValue" => value is null || value is int number && number == 0 || tables.TryGetValue(_target!, out TypedTable? target)
                     && target.Rows.Any(other => Equals(other.Cells["ID"].Value, value) && CellValueConverter.Format(other.Cells[_targetColumn!].Value) == _value),
                 _ => false

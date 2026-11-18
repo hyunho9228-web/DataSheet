@@ -14,7 +14,8 @@ static int Run(string[] args)
 {
 try
 {
-    if (args.Length > 1 || args.Any(argument => argument is not ("--check" or "--deploy"))) throw new ArgumentException("사용법: DeployData.exe [--check | --deploy]");
+    if (args.Length > 1 || args.Any(argument => argument is not ("--check" or "--deploy" or "--check-source"))) throw new ArgumentException("사용법: DeployData.exe [--check | --check-source | --deploy]");
+    bool sourceOnly = args.Contains("--check-source");
     bool deploy = args.Length == 0 || args.Contains("--deploy");
     string root = Directory.Exists(Path.Combine(AppContext.BaseDirectory, "tables")) ? AppContext.BaseDirectory : Directory.GetCurrentDirectory();
     if (!Directory.Exists(Path.Combine(root, "tables"))) throw new DirectoryNotFoundException("DataSheet 폴더에서 실행해 주세요.");
@@ -42,8 +43,9 @@ try
         IReadOnlyList<OutputFile> jsonFiles = new JsonAssetPipeline().Collect(root, workspace.Folder("JsonAssets"), data);
         files.AddRange(jsonFiles);
         OutputCatalog.ValidateJsonNames(files);
-        files.AddRange(new UnityCodeOutput().Create(data, client, workspace, jsonFiles));
+        files.AddRange(new UnityCodeOutput().Create(data, client, workspace, jsonFiles, preserveDefinitions: !sourceOnly));
         if (deploy) new DeploymentService().Deploy(files, client, workspace);
+        if (sourceOnly) Console.WriteLine("원본 전용 검사입니다. 클라이언트 정의 호환성은 확인하지 않았으며 배포하지 않습니다. 배포 전 --check가 통과해야 합니다.");
         string jsonSummary = string.Join(", ", jsonFiles.GroupBy(file => Path.GetDirectoryName(file.RelativePath)!.Replace('\\', '/'))
             .Select(group => $"{group.Key}: {group.Count()}개"));
         Console.WriteLine($"{(deploy ? "배포" : "검사")} 완료: {data.Tables.Count}개 탭, JSON 원본 {jsonFiles.Count}개 ({jsonSummary}). Unity 호환 코드 검사를 통과했습니다. 임시 생성 파일을 정리합니다.");

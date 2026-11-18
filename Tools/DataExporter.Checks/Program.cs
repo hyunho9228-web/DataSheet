@@ -9,6 +9,19 @@ void Fails(Action action, string message)
     try { action(); } catch (Exception) { failed = true; }
     Assert(failed, message);
 }
+if (args.Contains("--source-only"))
+{
+    ProjectData sourceData = ProjectData.Load(Directory.GetCurrentDirectory());
+    SoundSchemaChecks.Run(sourceData, Assert, Fails);
+    EnumDeploymentChecks.Run(sourceData, Assert, Fails, workspace);
+    string sourceClient = Path.GetFullPath("../Human_Ghost-");
+    var json = new JsonAssetPipeline().Collect(Directory.GetCurrentDirectory(), workspace.Folder("SourceJson"), sourceData);
+    var sourceOutput = new UnityCodeOutput().Create(sourceData, sourceClient, workspace, json, preserveDefinitions: false);
+    Assert(sourceOutput.Any(file => file.RelativePath.EndsWith("SoundCategory.cs", StringComparison.Ordinal)), "소리 enum 생성 누락");
+    Fails(() => new UnityCodeOutput().Create(sourceData, sourceClient, workspace, json), "기존 정의와 새 시트의 불일치를 엄격 검사에서 막아야 합니다.");
+    Console.WriteLine($"원본 전용 검사 {checks}개 통과. 생성 C# 9·로딩 계획과 기존 정의 불일치 차단을 확인했습니다. 배포하지 않습니다.");
+    return;
+}
 if (!args.Contains("--deployment-only"))
 {
 ProjectData data = ProjectData.Load(Directory.GetCurrentDirectory());
@@ -19,6 +32,7 @@ CutsceneValidationChecks.Run(data, Assert, Fails);
 NpcDeploymentChecks.Run(data, Assert, Fails, workspace);
 JsonPipelineChecks.Run(data, Assert, Fails, workspace);
 EnumDeploymentChecks.Run(data, Assert, Fails, workspace);
+SoundSchemaChecks.Run(data, Assert, Fails);
 int expectedTables = Directory.EnumerateFiles("tables", "*.xlsx", SearchOption.AllDirectories)
     .Where(path => !Path.GetFileName(path).StartsWith("~$", StringComparison.Ordinal))
     .Sum(path => new SheetRuleReader().Read(new ExcelTableReader().Read(path)).Count);

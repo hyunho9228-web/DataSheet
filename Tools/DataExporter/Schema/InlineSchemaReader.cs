@@ -24,7 +24,7 @@ public sealed class InlineSchemaReader
                     if (!Enum.TryParse(values.Required("Type"), out FieldType type) || !Enum.IsDefined(type)) throw new InvalidDataException($"{name}: 타입 오류");
                     columns.Add(name, new ColumnSchema(name, type, values.Flag("Optional"), values.Number("Minimum"), values.Number("Maximum"),
                         values.Get("Unit") ?? "", values.Get("AllowedValues")?.Split('|'), values.Get("ReferenceTable"), values.Flag("ZeroMeansNone"),
-                        values.Flag("AllowKorean"), values.Flag("SharedCharacterStat"), values.Get("SharedStatKeysFrom")));
+                        values.Flag("AllowKorean"), values.Flag("SharedCharacterStat"), values.Get("SharedStatKeysFrom"), values.Get("EnumName")));
                     break;
                 case "@check": rules.Add(new TableRule(values)); break;
                 case "@group": group = values.Required("Column"); break;

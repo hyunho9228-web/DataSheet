@@ -6,7 +6,7 @@ namespace DataSheet.Export;
 
 public sealed class ClientLoadPlanCompiler
 {
-    public byte[] Compile(string clientRoot, string definitions, string plan)
+    public byte[] Compile(string clientRoot, string definitions, string plan, bool preserveDefinitions = true)
     {
         string scripts = Path.Combine(clientRoot, "Assets", "3.Script");
         if (!Directory.Exists(scripts)) throw new DirectoryNotFoundException("자동 로딩 계획 검사에 필요한 형제 클라이언트의 스크립트 폴더가 없습니다.");
@@ -21,7 +21,8 @@ public sealed class ClientLoadPlanCompiler
         {
             string name = Path.GetFileName(path);
             if (Path.GetFileName(Path.GetDirectoryName(path)) == "Enums" || name == "StateKey.cs") { models[name] = path; continue; }
-            if (models.TryGetValue(name, out string? existing)) ValidateConstructor(path, existing);
+            if (!preserveDefinitions) models[name] = path;
+            else if (models.TryGetValue(name, out string? existing)) ValidateConstructor(path, existing);
             else models.Add(name, path);
         }
         sources.AddRange(models.Values);
