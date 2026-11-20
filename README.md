@@ -1,5 +1,7 @@
 # DataSheet
 
+2026-11-20 배경음악 Sound ID 전환: Enum SoundCategory에 Bgm(6)을 추가하고 Sound 3082~3085(배경음악)를 넣었습니다. Stage.BGM_Normal·BGM_Battle과 BossState.Music은 문자열 키 대신 Category 6 Sound ID를 참조합니다(빈 Battle = 평상 유지, 빈 Music = 보스방 Stage 곡 유지). 보스방 8004 기본 곡 3083, 2페이즈 4002 곡 3084입니다. 검사 규칙만 바꿨으며 EXE는 다시 만들지 않았습니다. [기획자 BGM 설정 안내](../Human_Ghost-/Docs/기획자용%20안내문서/기획자용%20배경음악(BGM)%20설정%20안내.md)
+
 2026-11-18 Sound 원본·도구 개정: Category는 EnumDefinition의 SoundCategory, RefIndex는 분류별 대상 ID로 관리합니다. 클라이언트 연결 전에는 `DeployData.exe --check-source`로 원본·생성 코드만 검사합니다. `--check`·`--deploy`의 기존 정의 호환 검사는 유지하며 현재 스키마 불일치에서는 중단합니다. enum은 매 배포 갱신, 일반 C# 정의는 보존합니다. [기획자 작성·검사 안내](../Human_Ghost-/Docs/기획자용%20안내문서/기획자용%20사운드%20테이블%20작성과%20배포%20안내.md#12-소리-대상-분류와-refindex--2026-11-18)
 
 2026-11-16 어그로 개정: MonsterAggro를 8방향 거리로 공급하고 사용자 승인으로 SameLevelHeight(초기 10, tile_x100)를 추가했습니다. 기존 SightHeight는 삭제됐고 Monster.SightRange는 운영 인식에 사용하지 않습니다. 다른 탭은 변경하지 않았습니다. [기획자 사용 안내](../Human_Ghost-/Docs/기획자용%20안내문서/몬스터%20인식과%20추적%20데이터%20사용%20안내.md) · [방향·정수·배포 설계](../Human_Ghost-/Docs/개발자용%20설계문서/몬스터%208방향%20인식과%20추적%20설계.md)
