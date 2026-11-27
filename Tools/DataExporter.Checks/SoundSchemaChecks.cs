@@ -37,6 +37,16 @@ internal static class SoundSchemaChecks
         check(!Rejected(categories["Common"], null), "공용은 빈 참조를 허용해야 합니다.");
         check(Rejected(categories["Common"], Id("Stage")), "공용의 불필요한 참조를 막아야 합니다.");
         check(Rejected(int.MaxValue, null), "시트에 없는 enum 값을 막아야 합니다.");
+        DataIssue[] Issues(int category, int? reference) => new DataValidator().Validate(Changed(category, reference)).ToArray();
+        var missingRef = Issues(categories["Player"], null);
+        check(missingRef.Length == 1 && missingRef[0].Column == "RefIndex" && missingRef[0].Message.Contains("비어 있습니다"),
+            "RefIndex 누락은 RefIndex 칸에 빈칸 오류로 보고해야 합니다.");
+        var wrongRef = Issues(categories["Player"], int.MaxValue);
+        check(wrongRef.Length == 1 && wrongRef[0].Column == "RefIndex" && wrongRef[0].Message.Contains("잘못됐습니다"),
+            "없는 RefIndex는 RefIndex 칸에 잘못된 값 오류로 보고해야 합니다.");
+        var extraRef = Issues(categories["Common"], Id("Stage"));
+        check(extraRef.Length == 1 && extraRef[0].Column == "RefIndex" && extraRef[0].Message.Contains("비워야"),
+            "공용의 불필요한 RefIndex는 RefIndex 칸에 보고해야 합니다.");
 
         var missing = sound with { Schema = sound.Schema with { Columns = sound.Schema.Columns.Select(field =>
             field.Name == "Category" ? field with { EnumName = "MissingSoundCategory" } : field).ToArray() } };

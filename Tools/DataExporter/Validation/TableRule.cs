@@ -78,7 +78,29 @@ public sealed class TableRule : ITableRule
                     && target.Rows.Any(other => Equals(other.Cells["ID"].Value, value) && CellValueConverter.Format(other.Cells[_targetColumn!].Value) == _value),
                 _ => false
             };
-            if (!valid) yield return new DataIssue(_code, cell.Source, cell.Schema.Name, "시트의 지정 검사 규칙을 만족하지 않습니다.");
+            if (valid) continue;
+            if (_kind is "ConditionalReference" or "ConditionalValue")
+            {
+                TypedCell checkedCell = row.Cells[_columns[1]];
+                yield return new DataIssue(_code, checkedCell.Source, checkedCell.Schema.Name, ConditionalMessage(text, checkedCell.Value));
+            }
+            else yield return new DataIssue(_code, cell.Source, cell.Schema.Name, "시트의 지정 검사 규칙을 만족하지 않습니다.");
         }
+    }
+
+    private string ConditionalMessage(string when, object? value)
+    {
+        string condition = $"{_columns[0]} 칸 값이 {when}이면";
+        string current = CellValueConverter.Format(value);
+        if (_kind == "ConditionalValue")
+            return _value == ""
+                ? $"{_columns[1]} 칸은 비워야 합니다. {condition} 이 칸에 아무것도 적지 않습니다. 지금 적힌 값: {current}"
+                : $"{_columns[1]} 칸 값이 잘못됐습니다. {condition} 이 칸에 {_value}을(를) 적습니다. 지금 적힌 값: {current}";
+        string target = _targetColumn is null
+            ? $"{_target} 표에 있는 번호"
+            : $"{_target} 표에서 {_targetColumn} 칸이 {_value}인 줄의 번호";
+        return value is null
+            ? $"{_columns[1]} 칸이 비어 있습니다. {condition} {target}를 적어야 합니다."
+            : $"{_columns[1]} 칸 값이 잘못됐습니다. {current}은(는) 없는 번호입니다. {condition} {target}를 적어야 합니다.";
     }
 }
